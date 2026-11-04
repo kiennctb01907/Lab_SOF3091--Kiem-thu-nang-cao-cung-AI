@@ -1,5 +1,4 @@
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 
 namespace FirstTests;
 
@@ -15,10 +14,8 @@ public class FirstSeleniumTest
     [SetUp]
     public void SetUp()
     {
-        // Selenium Manager (có sẵn từ Selenium 4.6) tự tải ChromeDriver khớp với phiên bản Chrome.
-        driver = new ChromeDriver();
-        driver.Manage().Window.Maximize();
-        driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+        // Khởi tạo ChromeDriver qua DriverFactory (cấu hình ChromeOptions dùng chung).
+        driver = DriverFactory.CreateChromeDriver();
     }
 
     [Test]
