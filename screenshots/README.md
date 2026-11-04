@@ -10,7 +10,7 @@
 | `06_dotnet_test_passed.png` | Terminal chạy `dotnet test` → *Passed: 2* | B |
 | `07_commit_history_github.jpg` | Lịch sử commit trên GitHub (branch `main`) | C |
 | `08_git_log_graph.png` | `git log --graph`: các branch thành viên và các lần merge Pull Request | C |
-| `09_pull_requests_merged.jpg` | 5 Pull Request của nhóm đã được merge | C |
+| `09_pull_requests_merged.jpg` | Các Pull Request của nhóm đã được merge | C |
 
 Các file `log_*.txt` là output dạng chữ của các lệnh trên.
 
