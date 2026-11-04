@@ -1,6 +1,6 @@
 # Quy trình làm việc nhóm với Git/GitHub (Phần C)
 
-> Người phụ trách: **Phương Nam**
+> Người phụ trách: **Toàn Thắng**
 
 Repository: https://github.com/kiennctb01907/lab1_kiemthuAI (public)
 
@@ -72,4 +72,4 @@ Kiểm tra trước khi commit: `git status` không được có file trong `bin
 | Minh Phương | `feature/minh-phuong-second-test` | Test Selenium thứ 2 (example.com) |
 | Vĩnh Phát | `feature/vinh-phat-chrome-options` | `DriverFactory` cấu hình ChromeOptions dùng chung |
 | Gia Huy | `feature/gia-huy-setup-guide` | Tài liệu cài đặt môi trường |
-| Phương Nam | `feature/phuong-nam-git-workflow` | Tài liệu quy trình Git nhóm |
+| Toàn Thắng | `feature/toan-thang-git-workflow` | Tài liệu quy trình Git nhóm |

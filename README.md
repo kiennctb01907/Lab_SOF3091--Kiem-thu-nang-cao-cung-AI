@@ -12,7 +12,9 @@ Repository: https://github.com/kiennctb01907/lab1_kiemthuAI
 | Minh Phương | Thành viên | `feature/minh-phuong-second-test` | Test Selenium thứ 2 cho trang example.com (PR #2) |
 | Vĩnh Phát | Thành viên | `feature/vinh-phat-chrome-options` | `DriverFactory`: cấu hình ChromeOptions dùng chung, chế độ headless (PR #3) |
 | Gia Huy | Thành viên | `feature/gia-huy-setup-guide` | Tài liệu cài đặt môi trường — [docs/HUONG_DAN_CAI_DAT.md](docs/HUONG_DAN_CAI_DAT.md) (PR #4) |
-| Phương Nam | Thành viên | `feature/phuong-nam-git-workflow` | Tài liệu quy trình Git nhóm — [docs/QUY_TRINH_GIT.md](docs/QUY_TRINH_GIT.md) (PR #5) |
+| Toàn Thắng | Thành viên | `feature/toan-thang-git-workflow` | Tài liệu quy trình Git nhóm — [docs/QUY_TRINH_GIT.md](docs/QUY_TRINH_GIT.md) (PR #5, #7) |
+
+> Ghi chú: lúc đầu nhóm ghi nhầm tên thành viên thứ 5 là "Phương Nam". Tên đúng là **Toàn Thắng**. Branch đã được đổi tên trên GitHub và các tài liệu đã được sửa lại trong PR #7. Commit cũ (`52ed8b8`) vẫn giữ nguyên message có tên cũ, vì đó là lịch sử đã merge vào `main`.
 
 Quy trình: mỗi người code trên branch riêng → push → tạo Pull Request vào `main` → nhóm trưởng review → **Merge pull request**.
 
