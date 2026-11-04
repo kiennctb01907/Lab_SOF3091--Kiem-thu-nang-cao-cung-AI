@@ -5,13 +5,17 @@ Test run for C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\
 A total of 1 test files matched the specified pattern.
 NUnit Adapter 5.0.0.0: Test execution started
 Running all tests in C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\FirstTests.dll
-   NUnit3TestExecutor discovered 1 of 1 NUnit test cases using Current Discovery mode, Non-Explicit run
+   NUnit3TestExecutor discovered 2 of 2 NUnit test cases using Current Discovery mode, Non-Explicit run
 Tiêu đề trang: Selenium
 
-NUnit Adapter 5.0.0.0: Test execution complete
   Passed OpenSeleniumHomePage_TitleShouldContainSelenium [2 s]
+Tiêu đề trang: Example Domain
+Đoạn văn đầu tiên: This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.
+
+NUnit Adapter 5.0.0.0: Test execution complete
+  Passed OpenExampleDomain_TitleAndContentShouldMatch [1 s]
 
 Test Run Successful.
-Total tests: 1
-     Passed: 1
- Total time: 3.7801 Seconds
+Total tests: 2
+     Passed: 2
+ Total time: 4.7423 Seconds
