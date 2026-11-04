@@ -1,13 +1,11 @@
 # Ảnh minh chứng
 
-Cần bổ sung ảnh chụp màn hình (`Win + Shift + S`) với tên như sau:
-
-| File ảnh | Nội dung cần chụp | Phần |
+| File | Nội dung | Phần |
 |---|---|---|
-| `01_dotnet_version.png` | Terminal chạy `dotnet --version` | A |
+| `01_dotnet_version.png` | Terminal chạy `dotnet --version` → `10.0.301` | A |
 | `02_dotnet_info.png` | Terminal chạy `dotnet --info` | A |
-| `03_visual_studio.png` | Visual Studio mở solution `Lab1_KiemThuAI.sln` (Solution Explorer) | A |
-| `04_csproj.png` | File `FirstTests.csproj` có dòng `Selenium.WebDriver` | A |
-| `05_test_passed.png` | Test Explorer hiện test **Passed** | B |
-| `06_test_output.png` | Output test có dòng `Tiêu đề trang: Selenium` | B |
-| `07_commit_history.png` | Lịch sử commit (Git → View Branch History, hoặc tab Commits trên GitHub) | C |
+| `03_visual_studio_csproj.png` | Visual Studio 2026 mở `FirstTests.csproj`, có gói `Selenium.WebDriver` 4.52.0 | A |
+| `04_visual_studio_test_run.png` | Visual Studio: code test, thanh trạng thái *Test run finished: 2 Tests (2 Passed, 0 Failed)* | B |
+| `05_test_explorer_passed.png` | Test Explorer: 2 test **Passed** | B |
+| `06_dotnet_test_passed.png` | Terminal chạy `dotnet test` → *Passed: 2* | B |
+| `07_commit_history_github.jpg` | Lịch sử commit trên GitHub (branch `main`) | C |
