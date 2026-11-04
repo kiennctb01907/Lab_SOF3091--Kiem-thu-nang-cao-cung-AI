@@ -1,5 +1,4 @@
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 
 namespace FirstTests;
 
@@ -15,7 +14,7 @@ public class SecondSeleniumTest
     [SetUp]
     public void SetUp()
     {
-        driver = new ChromeDriver();
+        driver = DriverFactory.CreateChromeDriver();
     }
 
     [Test]
