@@ -16,6 +16,34 @@ Khảo sát bằng DevTools (chuột phải → Inspect), thứ tự ưu tiên: 
 
 Locator dùng cho danh sách ở Phần C: `[data-test="inventory-item"]` khớp **6** phần tử (ảnh `lab2_C_inventory_items.png`), bên trong mỗi sản phẩm dùng `[data-test="inventory-item-name"]` và `[data-test="inventory-item-price"]`.
 
+## Phần B — Kịch bản đăng nhập (thuận & nghịch)
+
+File `FirstTests/LoginTests.cs`: `[SetUp]` khởi tạo ChromeDriver và mở trang đăng nhập, `[TearDown]` gọi `Quit()` rồi `Dispose()`. Các bước đăng nhập được gom vào hàm `Login(username, password)` để dùng lại.
+
+| Ca | Dữ liệu | Assert |
+|---|---|---|
+| Ca 1 — luồng thuận | `standard_user` / `secret_sauce` | URL chuyển sang `https://www.saucedemo.com/inventory.html` |
+| Ca 2 — luồng nghịch | `locked_out_user` / `secret_sauce` | Thông báo lỗi `[data-test="error"]` hiện ra, nội dung đúng là `Epic sadface: Sorry, this user has been locked out.`, vẫn ở trang đăng nhập |
+
+Ảnh kết quả: `screenshots/lab2_B_login_tests_passed.png`.
+
+## Phần C — Thu thập dữ liệu sản phẩm
+
+Ca `Inventory_ShouldListSixProductsWithValidNameAndPrice`: đăng nhập, dùng `FindElements` lấy danh sách sản phẩm, rồi dùng `item.FindElement(...)` để lấy tên và giá **bên trong từng sản phẩm** và in ra. Các Assert:
+
+- Có đúng 6 sản phẩm.
+- Không có tên nào rỗng, không có tên trùng nhau.
+- Danh sách có sản phẩm `Sauce Labs Backpack`, và giá của nó đúng là `$29.99`.
+- Mọi giá đều bắt đầu bằng ký tự `$` và là số dương.
+
+Ảnh kết quả: `screenshots/lab2_C_product_data_passed.png`, `screenshots/lab2_C_test_explorer_passed.png`.
+
+Chạy test: mở `Lab1_KiemThuAI.sln` bằng Visual Studio → **Test → Test Explorer → Run All Tests**, hoặc:
+
+```bash
+dotnet test --filter FullyQualifiedName~LoginTests
+```
+
 ---
 
 # Lab 1 — Nhập môn kiểm thử tự động & Thiết lập môi trường
