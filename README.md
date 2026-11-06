@@ -44,6 +44,78 @@ Chạy test: mở `Lab1_KiemThuAI.sln` bằng Visual Studio → **Test → Test 
 dotnet test --filter FullyQualifiedName~LoginTests
 ```
 
+
+## Phần D — Lồng ghép AI: tối ưu locator
+
+**Phần tử chọn:** giá của sản phẩm "Sauce Labs Backpack" (ô giá không có `id`). Locator ban đầu là XPath tuyệt đối — mô tả đường đi từ `/html/body` xuống ô giá (chỉ để so sánh, không dùng trong code):
+
+```
+/html/body/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/div[1]
+```
+
+### Prompt đã dùng
+
+> Em đang viết test Selenium C# (NUnit) cho trang https://www.saucedemo.com, đã đăng nhập vào trang inventory.html. Em muốn lấy giá của sản phẩm "Sauce Labs Backpack". Hiện em dùng XPath copy từ DevTools:
+> `/html/body/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/div[1]`
+>
+> Đây là outerHTML của sản phẩm đó em copy từ DevTools:
+>
+> ```html
+> <div class="inventory_item" data-test="inventory-item"><div class="inventory_item_img"><a href="#" id="item_4_img_link" data-test="item-4-img-link" role="button" aria-label="View details for Sauce Labs Backpack"><img alt="Sauce Labs Backpack" class="inventory_item_img" data-test="inventory-item-sauce-labs-backpack-img" src="/assets/sauce-backpack-1200x1500-CjRW-Djj.jpg"></a></div><div class="inventory_item_description" data-test="inventory-item-description"><div class="inventory_item_label"><a href="#" id="item_4_title_link" data-test="item-4-title-link" role="button" aria-label="View details for Sauce Labs Backpack"><div class="inventory_item_name " data-test="inventory-item-name">Sauce Labs Backpack</div></a><div class="inventory_item_desc" data-test="inventory-item-desc">carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.</div></div><div class="pricebar"><div class="inventory_item_price" data-test="inventory-item-price">$29.99</div><button class="btn btn_primary btn_small btn_inventory " data-test="add-to-cart-sauce-labs-backpack" id="add-to-cart-sauce-labs-backpack" name="add-to-cart-sauce-labs-backpack">Add to cart</button></div></div></div>
+> ```
+>
+> Anh/chị đề xuất giúp em locator bền vững hơn để lấy đúng giá của sản phẩm này (CSS Selector hoặc XPath), và giải thích vì sao nó bền vững hơn XPath tuyệt đối ạ.
+
+### Câu trả lời của AI (Claude)
+
+> Em nên tìm giá theo **tên sản phẩm** kết hợp với thuộc tính **`data-test`**, đừng dựa vào vị trí trong cây DOM.
+>
+> **Cách 1: XPath (nên dùng)**
+> ```xpath
+> //div[@data-test='inventory-item'][.//div[@data-test='inventory-item-name' and normalize-space()='Sauce Labs Backpack']]//div[@data-test='inventory-item-price']
+> ```
+> Nghĩa là: tìm khối sản phẩm có tên "Sauce Labs Backpack", rồi lấy ô giá nằm trong khối đó. `normalize-space()` bỏ khoảng trắng thừa ở đầu và cuối chữ.
+>
+> **Cách 2: CSS Selector**
+> CSS không lọc được theo chữ hiển thị. Vì vậy em dựa vào id của nút "Add to cart", id này có chứa tên sản phẩm:
+> ```css
+> .pricebar:has(#add-to-cart-sauce-labs-backpack) [data-test="inventory-item-price"]
+> ```
+> Selector này cần `:has()`, Chrome và Edge bản mới đều hỗ trợ. Lưu ý: khi đã thêm vào giỏ, nút này đổi thành `remove-sauce-labs-backpack`, nên selector sẽ không còn khớp. Cách 1 không bị ảnh hưởng.
+>
+> **Code C# (NUnit)**
+> ```csharp
+> var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+> By priceLocator = By.XPath(
+>     "//div[@data-test='inventory-item']" +
+>     "[.//div[@data-test='inventory-item-name' and normalize-space()='Sauce Labs Backpack']]" +
+>     "//div[@data-test='inventory-item-price']");
+>
+> IWebElement priceEl = wait.Until(d => d.FindElement(priceLocator));
+> Assert.That(priceEl.Text, Is.EqualTo("$29.99"));
+> ```
+>
+> **Vì sao bền vững hơn XPath tuyệt đối?**
+> - **XPath tuyệt đối phụ thuộc từng tầng `div[1]/div[2]...`.** Chỉ cần thêm một thẻ bọc, một banner, hoặc đổi bố cục là locator hỏng.
+> - **Nó có thể lấy nhầm mà không báo lỗi.** Nếu em sắp xếp lại danh sách (ví dụ "Price (low to high)"), vị trí đó sẽ thuộc về sản phẩm khác. Test lấy sai giá mà không có lỗi gì báo ra.
+> - **`data-test` được làm riêng cho việc kiểm thử.** Lập trình viên ít khi đổi nó khi chỉnh giao diện, khác với `class`. Ví dụ `class="inventory_item_name "` có một dấu cách thừa ở cuối, nếu so sánh `@class` chính xác sẽ dễ sai.
+> - **Locator gắn với ý nghĩa nghiệp vụ** ("giá của sản phẩm tên X"), nên đọc code là hiểu ngay test đang kiểm tra gì.
+
+### Tự kiểm chứng bằng Ctrl+F
+
+| Locator | Trạng thái trang | Kết quả Ctrl+F | Ảnh |
+|---|---|---|---|
+| XPath tuyệt đối (ban đầu) | Mặc định | 1 of 1, đúng giá $29.99 | `lab2_D0_absolute_xpath.png` |
+| XPath tuyệt đối (ban đầu) | Sắp xếp "Price (low to high)" | 1 of 1 nhưng trỏ sang **$7.99** của Sauce Labs Onesie — lấy nhầm mà không báo lỗi | `lab2_D5_absolute_xpath_after_sort.png` |
+| AI cách 1 — XPath theo tên + `data-test` | Mặc định | 1 of 1, đúng $29.99 | `lab2_D1_ai_xpath.png` |
+| AI cách 1 — XPath theo tên + `data-test` | Sau khi bấm "Add to cart" | Vẫn 1 of 1 | `lab2_D4_ai_xpath_after_add_to_cart.png` |
+| AI cách 2 — CSS `:has(#add-to-cart-...)` | Mặc định | 1 of 1 | `lab2_D2_ai_css.png` |
+| AI cách 2 — CSS `:has(#add-to-cart-...)` | Sau khi bấm "Add to cart" | **Không khớp** (nút đổi id thành `remove-sauce-labs-backpack`) | `lab2_D3_ai_css_after_add_to_cart.png` |
+
+### Nhận xét
+
+AI đề xuất đúng hướng: bỏ XPath tuyệt đối, tìm khối sản phẩm theo tên rồi lấy ô giá bên trong bằng `data-test`. Em dùng Ctrl+F kiểm tra thì XPath của AI khớp 1 of 1, và vẫn đúng sau khi bấm "Add to cart". Hai cảnh báo của AI cũng đúng: XPath tuyệt đối sẽ trỏ sang sản phẩm khác khi sắp xếp lại danh sách ($7.99 thay vì $29.99), còn CSS dựa vào id nút "Add to cart" thì không còn khớp khi nút đổi thành "Remove". Chỗ AI chưa đầy đủ: code mẫu thiếu dòng `using OpenQA.Selenium.Support.UI;` để dùng được `WebDriverWait`, và AI không nói cách 1 phụ thuộc vào chữ hiển thị, nếu đổi tên sản phẩm thì locator phải sửa theo. Vì vậy em chọn cách 1 của AI nhưng vẫn tự kiểm chứng lại bằng Ctrl+F trước khi dùng.
+
 ---
 
 # Lab 1 — Nhập môn kiểm thử tự động & Thiết lập môi trường
