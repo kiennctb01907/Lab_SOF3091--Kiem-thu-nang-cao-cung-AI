@@ -26,6 +26,20 @@ Assert không chỉ đếm số lượng:
 
 Lỗi gặp khi làm: đọc lại lựa chọn dropdown sau khi sắp xếp bị `StaleElementReferenceException` vì trang vẽ lại dropdown — sửa bằng cách tìm lại phần tử. Ảnh: `screenshots/lab3_B_sort_price_passed.png`.
 
+## Phần C — Alert & iframe (`AlertIframeTests.cs`)
+
+Trang https://the-internet.herokuapp.com/javascript_alerts — chờ alert bằng `wait.Until(d => d.SwitchTo().Alert())`, Assert `alert.Text` **trước** khi xử lý, sau đó Assert `#result`:
+
+| Ca | Thao tác | Assert `alert.Text` | Assert `#result` |
+|---|---|---|---|
+| JS Alert | `Accept()` | `I am a JS Alert` | `You successfully clicked an alert` |
+| JS Confirm | `Dismiss()` | `I am a JS Confirm` | `You clicked: Cancel` |
+| JS Prompt | `SendKeys("Xin chao Selenium")` + `Accept()` | `I am a JS prompt` | `You entered: Xin chao Selenium` |
+
+Trang https://the-internet.herokuapp.com/iframe — `SwitchTo().Frame("mce_0_ifr")`, chờ TinyMCE khởi tạo xong, chọn hết (Ctrl+A) rồi gõ đoạn chữ vào trình soạn thảo, Assert nội dung đã gõ; sau đó `SwitchTo().DefaultContent()` và đọc được tiêu đề trang chính.
+
+Lỗi gặp khi làm: lần đầu chữ không vào được trình soạn thảo vì test vào iframe khi TinyMCE chưa khởi tạo xong và `Clear()` không dùng được với vùng `contenteditable` — sửa bằng cách chờ thân trình soạn thảo sẵn sàng và dùng Ctrl+A. Ảnh: `screenshots/lab3_C_alert_iframe_passed.png`.
+
 ---
 
 # Lab 2 — Selenium WebDriver cơ bản: tương tác với trình duyệt và phần tử web
