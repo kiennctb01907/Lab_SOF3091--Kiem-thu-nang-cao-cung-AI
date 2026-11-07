@@ -16,6 +16,16 @@ Test bước 1 được gắn `[Explicit]` để Run All vẫn xanh; muốn xem 
 
 **Vì sao cùng một code mà kết quả khác nhau?** Selenium chỉ tự chờ trang tải xong khi chuyển trang, còn phần tử `#finish` thì được JavaScript tạo ra vài giây sau khi bấm Start, lúc trang đã tải xong từ lâu. Ở bước 1, `FindElement` chạy ngay lập tức khi `#finish` chưa tồn tại nên ném `NoSuchElementException`; kết quả phụ thuộc vào tốc độ mạng và máy, nên kiểu test này có thể lúc rớt lúc qua (flaky). Ở bước 2, `WebDriverWait.Until(...)` hỏi lại DOM liên tục tới khi `#finish` xuất hiện (tối đa 10 giây), nên test luôn đợi đúng lúc phần tử có mặt và pass ổn định.
 
+## Phần B — Dropdown & Assert đúng nghiệp vụ (`SortDropdownTests.cs`)
+
+Đăng nhập saucedemo bằng `standard_user`, dùng `SelectElement` chọn **Price (low to high)** trên dropdown `product_sort_container`, lấy 6 giá bằng `FindElements`, bỏ ký tự `$` rồi chuyển sang `decimal`. Kết quả in ra: `7.99, 9.99, 15.99, 15.99, 29.99, 49.99`.
+
+Assert không chỉ đếm số lượng:
+- Danh sách giá bằng **chính nó sau khi sắp xếp tăng dần** (`prices` == `prices.OrderBy(p => p)`), và `Is.Ordered.Ascending`.
+- Giá đầu là nhỏ nhất, giá cuối là lớn nhất; dropdown đang chọn đúng "Price (low to high)".
+
+Lỗi gặp khi làm: đọc lại lựa chọn dropdown sau khi sắp xếp bị `StaleElementReferenceException` vì trang vẽ lại dropdown — sửa bằng cách tìm lại phần tử. Ảnh: `screenshots/lab3_B_sort_price_passed.png`.
+
 ---
 
 # Lab 2 — Selenium WebDriver cơ bản: tương tác với trình duyệt và phần tử web
