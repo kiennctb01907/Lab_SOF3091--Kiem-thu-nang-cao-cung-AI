@@ -26,4 +26,20 @@ public class DynamicLoadingTests : Lab3TestBase
         Assert.That(finish.Text, Is.EqualTo("Hello World!"));
     }
 
+    /// <summary>Bước 2: thêm Explicit Wait (WebDriverWait + Until) -> pass.</summary>
+    [Test]
+    public void Step2_FindFinishWithExplicitWait_Passes()
+    {
+        driver.Navigate().GoToUrl(Url);
+        driver.FindElement(By.CssSelector("#start button")).Click();
+
+        IWebElement finish = wait.Until(d =>
+        {
+            IWebElement e = d.FindElement(By.Id("finish"));
+            return e.Displayed ? e : null;
+        });
+        Console.WriteLine($"Nội dung #finish: {finish.Text}");
+
+        Assert.That(finish.Text, Is.EqualTo("Hello World!"));
+    }
 }
