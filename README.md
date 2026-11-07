@@ -1,3 +1,23 @@
+# Lab 3 — Xử lý các tình huống thực tế phức tạp
+
+Làm tiếp trên repo của Lab 1–2. Code Lab 3 nằm trong `FirstTests/Lab3/`, dùng lớp cơ sở `Lab3TestBase` chỉ có **Explicit Wait** (`WebDriverWait`, 10 giây), không bật Implicit Wait, không dùng `Thread.Sleep`. Đã thêm gói `Selenium.Support`.
+
+## Phần A — Chứng minh vấn đề đồng bộ (`DynamicLoadingTests.cs`)
+
+Trang: https://the-internet.herokuapp.com/dynamic_loading/2 — bấm **Start** thì vài giây sau JavaScript mới tạo ra phần tử `#finish` chứa chữ "Hello World!".
+
+| Bước | Test | Kết quả | Ảnh |
+|---|---|---|---|
+| 1 — không chờ | `Step1_FindFinishWithoutWait_Fails`: tìm `#finish` ngay sau khi bấm Start | **Rớt**, `NoSuchElementException: no such element: Unable to locate element: {"method":"css selector","selector":"#finish"}` | `screenshots/lab3_A1_no_wait_failed.png` |
+| 2 — Explicit Wait | `Step2_FindFinishWithExplicitWait_Passes`: `wait.Until(d => ...FindElement(By.Id("finish")) ...)` | **Pass**, đọc được "Hello World!" | `screenshots/lab3_A2_explicit_wait_passed.png` |
+| Kiểm tra lại | Chạy bước 2 liên tiếp 10 lần | 10/10 Passed | `screenshots/lab3_A3_explicit_wait_10_runs.png` |
+
+Test bước 1 được gắn `[Explicit]` để Run All vẫn xanh; muốn xem lại lỗi thì chạy riêng: `dotnet test --filter Name=Step1_FindFinishWithoutWait_Fails`.
+
+**Vì sao cùng một code mà kết quả khác nhau?** Selenium chỉ tự chờ trang tải xong khi chuyển trang, còn phần tử `#finish` thì được JavaScript tạo ra vài giây sau khi bấm Start, lúc trang đã tải xong từ lâu. Ở bước 1, `FindElement` chạy ngay lập tức khi `#finish` chưa tồn tại nên ném `NoSuchElementException`; kết quả phụ thuộc vào tốc độ mạng và máy, nên kiểu test này có thể lúc rớt lúc qua (flaky). Ở bước 2, `WebDriverWait.Until(...)` hỏi lại DOM liên tục tới khi `#finish` xuất hiện (tối đa 10 giây), nên test luôn đợi đúng lúc phần tử có mặt và pass ổn định.
+
+---
+
 # Lab 2 — Selenium WebDriver cơ bản: tương tác với trình duyệt và phần tử web
 
 Trang kiểm thử: https://www.saucedemo.com — làm tiếp trên repo của Lab 1, file test: `FirstTests/LoginTests.cs`.
