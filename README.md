@@ -40,6 +40,26 @@ Trang https://the-internet.herokuapp.com/iframe — `SwitchTo().Frame("mce_0_ifr
 
 Lỗi gặp khi làm: lần đầu chữ không vào được trình soạn thảo vì test vào iframe khi TinyMCE chưa khởi tạo xong và `Clear()` không dùng được với vùng `contenteditable` — sửa bằng cách chờ thân trình soạn thảo sẵn sàng và dùng Ctrl+A. Ảnh: `screenshots/lab3_C_alert_iframe_passed.png`.
 
+## Phần D — Chụp ảnh khi test thất bại (`Lab3TestBase.cs`)
+
+Trong `[TearDown]` của lớp cơ sở (dùng chung cho mọi test Lab 3):
+
+```csharp
+if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && driver != null)
+{
+    string dir = Path.Combine(TestContext.CurrentContext.WorkDirectory, "FailureScreenshots");
+    Directory.CreateDirectory(dir);
+    string path = Path.Combine(dir, $"{TestContext.CurrentContext.Test.Name}.png");
+    ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(path);
+    TestContext.AddTestAttachment(path, "Ảnh chụp màn hình lúc test thất bại");
+}
+```
+
+- Chỉ chụp khi `Outcome.Status == TestStatus.Failed` (cần `using NUnit.Framework.Interfaces;`); test pass thì không sinh ảnh.
+- Tên file ảnh = tên ca test; đính kèm vào kết quả bằng `TestContext.AddTestAttachment(path)`.
+- Test cố ý rớt: `FailureScreenshotTests.InventoryFirstPrice_DeliberatelyWrongExpectation_Fails` (mong đợi giá đầu là `$7.99` nhưng thật là `$29.99`), gắn `[Explicit]`.
+- Ảnh minh chứng: `screenshots/lab3_D_InventoryFirstPrice_DeliberatelyWrongExpectation_Fails.png` (ảnh do test tự chụp) và `screenshots/lab3_D_failed_test_console.png` (kết quả rớt kèm đường dẫn ảnh).
+
 ---
 
 # Lab 2 — Selenium WebDriver cơ bản: tương tác với trình duyệt và phần tử web

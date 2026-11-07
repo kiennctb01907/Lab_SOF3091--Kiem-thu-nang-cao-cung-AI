@@ -1,3 +1,4 @@
+using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
@@ -30,6 +31,19 @@ public abstract class Lab3TestBase
     [TearDown]
     public void TearDown()
     {
+        // Phần D: CHỈ chụp ảnh khi test thất bại, đặt tên file theo tên ca test
+        if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && driver != null)
+        {
+            string dir = Path.Combine(TestContext.CurrentContext.WorkDirectory, "FailureScreenshots");
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, $"{TestContext.CurrentContext.Test.Name}.png");
+
+            Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+            screenshot.SaveAsFile(path);
+            TestContext.AddTestAttachment(path, "Ảnh chụp màn hình lúc test thất bại");
+            Console.WriteLine($"Đã chụp ảnh khi test rớt: {path}");
+        }
+
         driver?.Quit();
         driver?.Dispose();
     }
