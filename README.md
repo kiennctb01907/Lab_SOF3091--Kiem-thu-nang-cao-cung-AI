@@ -1,3 +1,342 @@
+# Lab 4 — OOP trong kiểm thử & Page Object Model (POM)
+
+Refactor bộ test của Bài 2–3 (trang https://www.saucedemo.com và https://the-internet.herokuapp.com) sang **Page Object Model** mà không đổi hành vi. Chạy test bằng **Test Explorer** của Visual Studio 2026.
+
+> Các phần Lab 3 và Lab 2 bên dưới nhắc tới `Lab3TestBase.cs`, `Lab3/...`, `FirstTests/LoginTests.cs`. Sau Lab 4 các file đó nằm trong `FirstTests/Tests/`. Hai test của Bài 1 (`FirstSeleniumTest`, `SecondSeleniumTest`) không thuộc Bài 2–3 nên giữ nguyên.
+
+## Cấu trúc (Phần A) và Page class (Phần B)
+
+```
+FirstTests/
+├── Pages/                        namespace FirstTests.Pages
+│   ├── BasePage.cs               abstract: driver, WebDriverWait, Tim(By)
+│   ├── LoginPage.cs
+│   ├── InventoryPage.cs
+│   ├── DynamicLoadingPage.cs     Bài 3 phần A
+│   ├── JsAlertsPage.cs           Bài 3 phần C (alert)
+│   └── IframePage.cs             Bài 3 phần C (iframe)
+└── Tests/                        namespace FirstTests.Tests
+    ├── TestBase.cs               mở/đóng Chrome, chụp ảnh khi test rớt
+    ├── LoginTests.cs             Bài 2
+    ├── SortDropdownTests.cs      Bài 3 phần B, dùng chaining
+    ├── DynamicLoadingTests.cs    Bài 3 phần A
+    ├── AlertIframeTests.cs       Bài 3 phần C
+    └── FailureScreenshotTests.cs Bài 3 phần D
+```
+
+- `BasePage` (abstract) chứa `driver`, `WebDriverWait` và hàm `Tim(By)` tìm phần tử kèm chờ. Mọi Page kế thừa `BasePage`, không khai báo lại `driver`/`wait`.
+- Locator là `private readonly By`; hành vi nghiệp vụ là `public`, tên trả lời "người dùng làm được gì".
+- `LoginPage`: `Mo()`, `DangNhap(tk, mk)` (trả về `InventoryPage`), `LayThongBaoLoi()`, `ThongBaoLoiDaHienThi()`, `LayUrl()`.
+- `InventoryPage`: `DaHienThi()`, `SapXep(value)` (trả về `this`), `LayDanhSachGia()`, `LayDanhSachTenSanPham()`, `LayDanhSachGiaHienThi()`, `LayKieuSapXepDangChon()`, `LayGiaSanPhamDauTien()`, `LayUrl()`.
+- Hành vi chuyển trang trả về `new TrangMoi(driver)`, hành vi ở lại trang trả về `this`.
+- Toàn bộ test chỉ dùng Explicit Wait (trong Page), không bật Implicit Wait.
+
+## Refactor test Bài 2–3 (Phần C)
+
+Toàn bộ 11 ca chạy thường và 2 ca `[Explicit]` của Bài 2–3 được chuyển sang Page Object, không bỏ Assert nào. Tự chấm bằng 3 phép thử (Find in Files của Visual Studio, `Ctrl+Shift+F`):
+
+| Phép thử | Tìm | Thư mục | Kết quả |
+|---|---|---|---|
+| Không có "By" trong test | `By` | `FirstTests\Tests` | 0 kết quả |
+| Không có Assert trong Page | `Assert` | `FirstTests\Pages` | 0 kết quả |
+| Không Page nào trả về `IWebElement` | `public[^=]*IWebElement` (regex) | `FirstTests\Pages` | 0 kết quả |
+
+**Chạy test trước và sau refactor** bằng Test Explorer (Run All Tests, sau đó chọn riêng 2 test `[Explicit]` và bấm Run). "Trước" chạy trên nhánh `main` cũ, "sau" chạy trên code đã refactor:
+
+| | Trước | Sau |
+|---|---|---|
+| Test chạy thường | 11 Passed, 0 Failed | 11 Passed, 0 Failed |
+| Test `[Explicit]` (không tự chạy) | 2 Not Run | 2 Not Run |
+| `Step1_FindFinishWithoutWait_Fails` (chạy riêng) | Failed — `NoSuchElementException ... #finish` | Failed — cùng lỗi |
+| `InventoryFirstPrice_DeliberatelyWrongExpectation_Fails` (chạy riêng) | Failed — `Is.EqualTo("$7.99")`, thực tế `$29.99` | Failed — cùng Assert, cùng giá trị |
+
+| Trước refactor | Sau refactor |
+|---|---|
+| ![Trước: Run All](screenshots/lab4_truoc_refactor_test_explorer.png) | ![Sau: Run All](screenshots/lab4_sau_refactor_test_explorer.png) |
+| ![Trước: test cố ý rớt](screenshots/lab4_truoc_refactor_test_co_y_rot.png) | ![Sau: test cố ý rớt](screenshots/lab4_sau_refactor_test_co_y_rot.png) |
+
+## Bài sắp xếp giá dùng POM + chaining (Phần D)
+
+```csharp
+InventoryPage trangSanPham = new LoginPage(driver).Mo()
+    .DangNhap("standard_user", "secret_sauce")
+    .SapXep("lohi");
+List<decimal> prices = trangSanPham.LayDanhSachGia();
+
+Assert.That(prices, Is.Ordered.Ascending);
+```
+
+Các Assert của Bài 3 gốc vẫn còn đủ: dropdown đang chọn đúng, có 6 giá, bằng danh sách đã sắp (`prices.Order()`), `Is.Ordered.Ascending`, giá đầu là nhỏ nhất, giá cuối là lớn nhất.
+
+## Thẩm định AI (Phần E)
+
+Nhờ một agent AI riêng (Claude, bắt đầu từ ngữ cảnh trống, không thấy code Page Object của nhóm) refactor file `LoginTests.cs` của Lab 2 sang POM.
+
+### Prompt đã dùng
+
+Prompt kèm nguyên file `LoginTests.cs` gốc (có trong lịch sử Git), phần yêu cầu như sau:
+
+> Em đang refactor bộ test Selenium C# (NUnit 4.3.2, Selenium.WebDriver 4.52, .NET 10) cho trang https://www.saucedemo.com sang mô hình Page Object Model (POM). Anh/chị refactor giúp em file test bên dưới theo ĐÚNG các quy ước sau:
+> 
+> 1. Cấu trúc: thư mục `Pages/` (namespace `FirstTests.Pages`) và `Tests/` (namespace `FirstTests.Tests`).
+> 2. `BasePage` là abstract class chứa: `driver`, `WebDriverWait` (10 giây) và hàm `Tim(By)` tìm phần tử KÈM chờ. Mọi Page class phải kế thừa `BasePage`, không tự khai báo lại `driver`/`wait`.
+> 3. `LoginPage` có tối thiểu: `DangNhap(tk, mk)` (trả về `InventoryPage`) và `LayThongBaoLoi()`. `InventoryPage` có tối thiểu: `DaHienThi()` và các hàm lấy danh sách sản phẩm (tên, giá) mà test cần.
+> 4. Locator để `private readonly By`; hành vi nghiệp vụ để `public`. Tên hành vi phải trả lời "người dùng LÀM ĐƯỢC GÌ" (đặt tên tiếng Việt không dấu), không đặt theo kiểu "trang có thẻ nào".
+> 5. KHÔNG có `Assert` bên trong Page Object. KHÔNG Page Object nào trả về `IWebElement`.
+> 6. Trong Page class dùng `Tim(locator)` thay cho `driver.FindElement(locator)`.
+> 7. File test sau khi refactor KHÔNG còn chữ `By` nào (mở file bấm Ctrl+F gõ By phải không có kết quả); chỉ gọi Page Object rồi `Assert`.
+> 8. Refactor là đổi CẤU TRÚC nhưng GIỮ NGUYÊN hành vi: mọi ca test và mọi Assert của file gốc phải còn đủ, kết quả chạy phải giống hệt trước khi refactor.
+> 
+> Hãy trả về toàn bộ code của `BasePage.cs`, `LoginPage.cs`, `InventoryPage.cs` và `LoginTests.cs` đã refactor.
+
+### Kết quả AI trả về
+
+AI trả về 4 file. Code nguyên văn:
+
+<details>
+<summary>Pages/BasePage.cs</summary>
+
+```csharp
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
+
+namespace FirstTests.Pages;
+
+public abstract class BasePage
+{
+    protected readonly IWebDriver driver;
+    protected readonly WebDriverWait wait;
+
+    protected BasePage(IWebDriver driver)
+    {
+        this.driver = driver;
+        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+    }
+
+    /// <summary>Tìm phần tử kèm chờ tối đa 10 giây.</summary>
+    protected IWebElement Tim(By locator)
+    {
+        return wait.Until(d => d.FindElement(locator));
+    }
+}
+```
+
+</details>
+
+<details>
+<summary>Pages/LoginPage.cs</summary>
+
+```csharp
+using OpenQA.Selenium;
+
+namespace FirstTests.Pages;
+
+public class LoginPage : BasePage
+{
+    private readonly By oTenDangNhap = By.Id("user-name");
+    private readonly By oMatKhau = By.Id("password");
+    private readonly By nutDangNhap = By.Id("login-button");
+    private readonly By thongBaoLoi = By.CssSelector("[data-test='error']");
+
+    public LoginPage(IWebDriver driver) : base(driver)
+    {
+    }
+
+    /// <summary>Nhập tài khoản, mật khẩu, bấm Login và trả về trang sản phẩm.</summary>
+    public InventoryPage DangNhap(string tk, string mk)
+    {
+        Tim(oTenDangNhap).SendKeys(tk);
+        Tim(oMatKhau).SendKeys(mk);
+        Tim(nutDangNhap).Click();
+        return new InventoryPage(driver);
+    }
+
+    public string LayThongBaoLoi()
+    {
+        return Tim(thongBaoLoi).Text;
+    }
+
+    public bool ThongBaoLoiDangHienThi()
+    {
+        return Tim(thongBaoLoi).Displayed;
+    }
+}
+```
+
+</details>
+
+<details>
+<summary>Pages/InventoryPage.cs</summary>
+
+```csharp
+using OpenQA.Selenium;
+
+namespace FirstTests.Pages;
+
+public class InventoryPage : BasePage
+{
+    private readonly By danhSachSanPham = By.CssSelector("[data-test='inventory-list']");
+    private readonly By moiSanPham = By.CssSelector("[data-test='inventory-item']");
+    private readonly By tenSanPham = By.CssSelector("[data-test='inventory-item-name']");
+    private readonly By giaSanPham = By.CssSelector("[data-test='inventory-item-price']");
+
+    public InventoryPage(IWebDriver driver) : base(driver)
+    {
+    }
+
+    /// <summary>Chờ danh sách sản phẩm hiện ra; trang đã hiển thị thì trả về true.</summary>
+    public bool DaHienThi()
+    {
+        return Tim(danhSachSanPham) != null;
+    }
+
+    public List<string> LayDanhSachTenSanPham()
+    {
+        return LayChuTrongTungSanPham(tenSanPham);
+    }
+
+    public List<string> LayDanhSachGiaSanPham()
+    {
+        return LayChuTrongTungSanPham(giaSanPham);
+    }
+
+    // Lấy thông tin BÊN TRONG từng sản phẩm bằng item.FindElement
+    private List<string> LayChuTrongTungSanPham(By locatorBenTrong)
+    {
+        Tim(moiSanPham);
+        var ketQua = new List<string>();
+        foreach (IWebElement item in driver.FindElements(moiSanPham))
+        {
+            ketQua.Add(item.FindElement(locatorBenTrong).Text);
+        }
+        return ketQua;
+    }
+}
+```
+
+</details>
+
+<details>
+<summary>Tests/LoginTests.cs</summary>
+
+```csharp
+using FirstTests.Pages;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+
+namespace FirstTests.Tests;
+
+[TestFixture]
+public class LoginTests
+{
+    private const string BaseUrl = "https://www.saucedemo.com/";
+
+    private IWebDriver driver = null!;
+    private LoginPage loginPage = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        var options = new ChromeOptions();
+        // Tắt trình quản lý mật khẩu để Chrome không hiện popup cảnh báo mật khẩu sau khi đăng nhập
+        options.AddUserProfilePreference("credentials_enable_service", false);
+        options.AddUserProfilePreference("profile.password_manager_enabled", false);
+        options.AddUserProfilePreference("profile.password_manager_leak_detection", false);
+
+        driver = new ChromeDriver(options);
+        driver.Manage().Window.Maximize();
+        driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+        driver.Navigate().GoToUrl(BaseUrl);
+
+        loginPage = new LoginPage(driver);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        driver?.Quit();
+        driver?.Dispose();
+    }
+
+    [Test]
+    public void Login_StandardUser_ShouldGoToInventoryPage()
+    {
+        InventoryPage inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
+
+        // Chờ danh sách sản phẩm hiện ra rồi mới kiểm tra URL
+        inventoryPage.DaHienThi();
+        Console.WriteLine($"URL sau khi đăng nhập: {driver.Url}");
+
+        Assert.That(driver.Url, Is.EqualTo(BaseUrl + "inventory.html"),
+            "Đăng nhập đúng phải chuyển sang trang inventory.html");
+    }
+
+    [Test]
+    public void Login_LockedOutUser_ShouldShowErrorMessage()
+    {
+        loginPage.DangNhap("locked_out_user", "secret_sauce");
+
+        string noiDungLoi = loginPage.LayThongBaoLoi();
+        bool loiDangHienThi = loginPage.ThongBaoLoiDangHienThi();
+        Console.WriteLine($"Thông báo lỗi: {noiDungLoi}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(loiDangHienThi, Is.True, "Thông báo lỗi phải hiện ra");
+            Assert.That(noiDungLoi, Is.EqualTo("Epic sadface: Sorry, this user has been locked out."),
+                "Nội dung thông báo lỗi không đúng");
+            Assert.That(driver.Url, Is.EqualTo(BaseUrl), "Tài khoản bị khóa thì phải ở lại trang đăng nhập");
+        });
+    }
+
+    [Test]
+    public void Inventory_ShouldListSixProductsWithValidNameAndPrice()
+    {
+        InventoryPage inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
+
+        List<string> names = inventoryPage.LayDanhSachTenSanPham();
+        List<string> prices = inventoryPage.LayDanhSachGiaSanPham();
+
+        for (int i = 0; i < names.Count; i++)
+        {
+            Console.WriteLine($"{names[i]} - {prices[i]}");
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(names, Has.Count.EqualTo(6), "Trang inventory phải có đúng 6 sản phẩm");
+            Assert.That(names, Has.None.Empty, "Không được có tên sản phẩm rỗng");
+            Assert.That(names, Is.Unique, "Tên sản phẩm không được trùng nhau");
+            Assert.That(names, Does.Contain("Sauce Labs Backpack"), "Danh sách phải có sản phẩm Sauce Labs Backpack");
+            Assert.That(prices, Has.All.StartWith("$"), "Mọi giá đều phải bắt đầu bằng ký tự $");
+            Assert.That(prices.Select(p => decimal.Parse(p.TrimStart('$'), System.Globalization.CultureInfo.InvariantCulture)),
+                Has.All.GreaterThan(0m), "Giá sản phẩm phải là số dương");
+            Assert.That(prices[names.IndexOf("Sauce Labs Backpack")], Is.EqualTo("$29.99"),
+                "Giá của Sauce Labs Backpack phải là $29.99");
+        });
+    }
+}
+```
+
+</details>
+
+### AI làm đúng
+
+3 phép thử cứng đều đạt trên code của AI (không "By" trong file test, không Assert trong Page, không Page nào trả về `IWebElement`); `BasePage` abstract có `driver`, `wait`, `Tim`; locator `private readonly By`; `DangNhap` trả `InventoryPage`. Nhóm chép 4 file vào project tạm, build và chạy: **3/3 test Passed**.
+
+### AI làm sai hoặc chưa đúng quy ước
+
+1. **Giữ `ImplicitWait` trong test** (`LoginTests.cs`, dòng `driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);`) trong khi `BasePage.Tim` dùng Explicit Wait. Trộn hai loại chờ là điều Bài 3 đã cảnh báo: mỗi lần `FindElement` bên trong vòng chờ lại bị Implicit Wait giữ thêm tối đa 5 giây nên thời gian chờ thực tế không còn là 10 giây. (Nhóm chưa đo số giây cụ thể; đây là hành vi Selenium đã biết, test vẫn Passed vì các phần tử đều có mặt.)
+2. **`DaHienThi()` không làm đúng tên**: `return Tim(danhSachSanPham) != null;`. `Tim` không bao giờ trả `null` (hoặc trả phần tử, hoặc ném `WebDriverTimeoutException`), nên hàm **không bao giờ trả `false`** và không kiểm tra phần tử có `Displayed`. Trong test AI còn gọi `inventoryPage.DaHienThi();` rồi bỏ qua giá trị trả về. Tên hàm hứa "đã hiển thị" nhưng thực tế không kiểm gì ngoài việc tìm thấy.
+3. **Trong Page dùng `driver.FindElements` trực tiếp**, trái quy ước "dùng `Tim(locator)` thay cho `driver.FindElement(locator)`". `Tim(moiSanPham)` chỉ chờ phần tử đầu tiên rồi mới lấy cả danh sách, nên không chắc đã đủ sản phẩm lúc lấy tên và giá.
+4. **Chưa gom phần dùng chung, vi phạm DRY**: file test vẫn tự tạo `ChromeDriver`, tự viết `SetUp`/`TearDown`, hard-code `BaseUrl` và đọc `driver.Url` trực tiếp (không có `LoginPage.Mo()` hay `LayUrl()`). Có 5 file test thì phải chép lại 5 lần. Nhóm đưa phần này vào `Tests/TestBase.cs` và `LayUrl()` của Page.
+
+Không có lỗi nào trong 4 điểm trên làm test rớt, nên chỉ bắt được nhờ **đọc code** chứ không phải nhờ chạy test.
+
+**Bài học:** AI làm đúng các tiêu chí kiểm bằng máy (tìm "By", tìm "Assert") nhưng bỏ sót các quy ước về ý nghĩa (tên hàm có đúng việc nó làm không, có trộn hai kiểu chờ không, có lặp code không).
+
+---
+
 # Lab 3 — Xử lý các tình huống thực tế phức tạp
 
 Làm tiếp trên repo của Lab 1–2. Code Lab 3 nằm trong `FirstTests/Lab3/`, dùng lớp cơ sở `Lab3TestBase` chỉ có **Explicit Wait** (`WebDriverWait`, 10 giây), không bật Implicit Wait, không dùng `Thread.Sleep`. Đã thêm gói `Selenium.Support`.
