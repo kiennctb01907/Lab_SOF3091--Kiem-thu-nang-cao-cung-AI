@@ -1,0 +1,34 @@
+using OpenQA.Selenium;
+
+namespace FirstTests.Pages;
+
+public class LoginPage : BasePage
+{
+    private readonly By oTenDangNhap = By.Id("user-name");
+    private readonly By oMatKhau = By.Id("password");
+    private readonly By nutDangNhap = By.Id("login-button");
+    private readonly By thongBaoLoi = By.CssSelector("[data-test='error']");
+
+    public LoginPage(IWebDriver driver) : base(driver)
+    {
+    }
+
+    /// <summary>Nhập tài khoản, mật khẩu, bấm Login và trả về trang sản phẩm.</summary>
+    public InventoryPage DangNhap(string tk, string mk)
+    {
+        Tim(oTenDangNhap).SendKeys(tk);
+        Tim(oMatKhau).SendKeys(mk);
+        Tim(nutDangNhap).Click();
+        return new InventoryPage(driver);
+    }
+
+    public string LayThongBaoLoi()
+    {
+        return Tim(thongBaoLoi).Text;
+    }
+
+    public bool ThongBaoLoiDangHienThi()
+    {
+        return Tim(thongBaoLoi).Displayed;
+    }
+}

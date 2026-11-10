@@ -1,18 +1,17 @@
 using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 
-namespace FirstTests.Lab3;
+namespace FirstTests.Tests;
 
 /// <summary>
-/// Lớp cơ sở cho các test Lab 3.
-/// Chỉ dùng Explicit Wait (WebDriverWait), KHÔNG bật Implicit Wait để thời gian chờ không bị cộng dồn.
+/// Lớp cơ sở cho mọi file test: mở/đóng Chrome và chụp ảnh khi test thất bại (Lab 3 - Phần D).
+/// Chỉ dùng Explicit Wait (nằm trong BasePage), KHÔNG bật Implicit Wait để thời gian chờ không bị cộng dồn.
+/// Test chỉ làm việc với Page Object, không tìm phần tử trực tiếp.
 /// </summary>
-public abstract class Lab3TestBase
+public abstract class TestBase
 {
     protected IWebDriver driver = null!;
-    protected WebDriverWait wait = null!;
 
     [SetUp]
     public void SetUp()
@@ -25,13 +24,12 @@ public abstract class Lab3TestBase
 
         driver = new ChromeDriver(options);
         driver.Manage().Window.Maximize();
-        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
     }
 
     [TearDown]
     public void TearDown()
     {
-        // Phần D: CHỈ chụp ảnh khi test thất bại, đặt tên file theo tên ca test
+        // CHỈ chụp ảnh khi test thất bại, đặt tên file theo tên ca test
         if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && driver != null)
         {
             string dir = Path.Combine(TestContext.CurrentContext.WorkDirectory, "FailureScreenshots");

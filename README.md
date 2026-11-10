@@ -1,3 +1,128 @@
+# Lab 4 — OOP trong kiểm thử & Page Object Model (POM)
+
+Refactor bộ test của Bài 2–3 (trang https://www.saucedemo.com và https://the-internet.herokuapp.com) sang **Page Object Model**, giữ nguyên hành vi. Làm trên **Visual Studio 2026**: chạy test bằng **Test Explorer**, tự chấm bằng **Find in Files** (`Ctrl+Shift+F`).
+
+> Các phần Lab 3 và Lab 2 bên dưới nhắc tới `Lab3TestBase.cs`, `Lab3/...`, `FirstTests/LoginTests.cs`. Sau Lab 4 các file đó nằm trong `FirstTests/Tests/` (xem bảng ở Phần C). Hai test của Bài 1 (`FirstSeleniumTest`, `SecondSeleniumTest`) không thuộc Bài 2–3 nên giữ nguyên.
+
+## Cấu trúc (Phần A)
+
+```
+FirstTests/
+├── Pages/                          namespace FirstTests.Pages
+│   ├── BasePage.cs                 abstract: driver, WebDriverWait, Tim(By)
+│   ├── LoginPage.cs                Mo, DangNhap, LayThongBaoLoi, ThongBaoLoiDaHienThi
+│   ├── InventoryPage.cs            DaHienThi, SapXep, LayDanhSachSanPham, LayDanhSachGia, ...
+│   ├── SanPham.cs                  record (Ten, GiaHienThi) — dữ liệu thuần, không chứa phần tử web
+│   ├── DynamicLoadingPage.cs       Bài 3 phần A
+│   ├── JsAlertsPage.cs             Bài 3 phần C (alert)
+│   └── IframePage.cs               Bài 3 phần C (iframe)
+└── Tests/                          namespace FirstTests.Tests
+    ├── TestBase.cs                 mở/đóng Chrome + chụp ảnh khi test rớt (trước đây Lab3TestBase)
+    ├── LoginTests.cs               Bài 2 phần B, C
+    ├── SortDropdownTests.cs        Bài 3 phần B
+    ├── DynamicLoadingTests.cs      Bài 3 phần A
+    ├── AlertIframeTests.cs         Bài 3 phần C
+    └── FailureScreenshotTests.cs   Bài 3 phần D
+```
+
+`BasePage` giữ `driver`, `WebDriverWait` (10 giây) và `Tim(By)` — tìm phần tử kèm chờ. Cả 5 Page class đều kế thừa `BasePage`, không khai báo lại `driver`/`wait`. Ngoài `Tim`, `BasePage` có thêm `TimHienThi` (chờ đến khi hiển thị), `TimTatCa` (chờ có ít nhất 1 phần tử) và `TimKhongCho` (chỉ dùng cho test cố ý rớt chứng minh vấn đề đồng bộ).
+
+Toàn bộ test chỉ dùng **Explicit Wait** (trong `BasePage`), không bật Implicit Wait để hai loại chờ không cộng dồn.
+
+## Page class (Phần B)
+
+Locator là `private readonly By`; hành vi là `public`, đặt tên theo việc người dùng làm được.
+
+| Page | Hành vi | Trả về |
+|---|---|---|
+| `LoginPage` | `Mo()` | `this` |
+| | `DangNhap(taiKhoan, matKhau)` | `InventoryPage` |
+| | `LayThongBaoLoi()`, `ThongBaoLoiDaHienThi()` | `string`, `bool` |
+| `InventoryPage` | `DaHienThi()` | `bool` (false nếu sau 10 giây vẫn không thấy danh sách) |
+| | `SapXep(value)` (az, za, lohi, hilo) | `this` |
+| | `LayKieuSapXepDangChon()` | `string` |
+| | `LayDanhSachSanPham()`, `LayDanhSachGia()`, `LayGiaSanPhamDauTien()` | `List<SanPham>`, `List<decimal>`, `string` |
+| `DynamicLoadingPage` | `Mo()`, `BamStart()` | `this` |
+| | `LayLoiChaoSauKhiChoHienRa()`, `LayLoiChaoNgayKhongCho()` | `string` |
+| `JsAlertsPage` | `Mo()`, `BamJsAlert/Confirm/Prompt()`, `ChapNhanHopThoai()`, `HuyHopThoai()`, `NhapVaoHopThoai(text)` | `this` |
+| | `LayNoiDungHopThoai()`, `LayKetQua()` | `string` |
+| `IframePage` | `Mo()`, `GoChuVaoTrinhSoan(text)` | `this` |
+| | `LayNoiDungTrinhSoan()`, `LayTieuDeTrang()` | `string` |
+
+Không Page nào trả về `IWebElement`. Dữ liệu sản phẩm trả về qua `SanPham` (kiểu giá trị thuần).
+
+## Refactor test Bài 2–3 và so sánh trước/sau (Phần C)
+
+| File cũ | File mới |
+|---|---|
+| `FirstTests/LoginTests.cs` | `FirstTests/Tests/LoginTests.cs` |
+| `FirstTests/Lab3/Lab3TestBase.cs` | `FirstTests/Tests/TestBase.cs` |
+| `FirstTests/Lab3/SortDropdownTests.cs` | `FirstTests/Tests/SortDropdownTests.cs` |
+| `FirstTests/Lab3/DynamicLoadingTests.cs` | `FirstTests/Tests/DynamicLoadingTests.cs` |
+| `FirstTests/Lab3/AlertIframeTests.cs` | `FirstTests/Tests/AlertIframeTests.cs` |
+| `FirstTests/Lab3/FailureScreenshotTests.cs` | `FirstTests/Tests/FailureScreenshotTests.cs` |
+
+Toàn bộ 11 ca chạy thường và 2 ca `[Explicit]` đều được chuyển; **không bỏ Assert nào** của bản gốc.
+
+**Tự chấm bằng 3 phép thử** (Visual Studio → `Ctrl+Shift+F` → Find in Files, *Look in* là thư mục cần kiểm, không bật Match case):
+
+| Phép thử | Tìm | Thư mục | Kết quả | Ảnh |
+|---|---|---|---|---|
+| Không có "By" trong test | `By` | `FirstTests\Tests` | Matching lines: **0** | `screenshots/lab4_find_by_trong_tests.png` |
+| Không có Assert trong Page | `Assert` | `FirstTests\Pages` | Matching lines: **0** | `screenshots/lab4_find_assert_trong_pages.png` |
+| Không Page nào trả về `IWebElement` | `public[^=]*IWebElement` (Use regular expressions) | `FirstTests\Pages` | Matching lines: **0** | `screenshots/lab4_find_iwebelement_trong_pages.png` |
+
+**Chạy test trước và sau refactor** bằng Test Explorer (**Test → Run All Tests**, rồi chạy riêng 2 test `[Explicit]` bằng cách chọn chúng và bấm Run). Ảnh "trước" chụp trên nhánh `main` (code cũ), ảnh "sau" chụp trên nhánh refactor:
+
+| | Trước (`main`) | Sau (refactor) |
+|---|---|---|
+| Test chạy thường | 11 Passed, 0 Failed | 11 Passed, 0 Failed |
+| Test `[Explicit]` (không tự chạy) | 2 Not Run | 2 Not Run |
+| `Step1_FindFinishWithoutWait_Fails` (chạy riêng) | Failed — `NoSuchElementException ... #finish` | Failed — cùng lỗi |
+| `InventoryFirstPrice_DeliberatelyWrongExpectation_Fails` (chạy riêng) | Failed — `Is.EqualTo("$7.99")`, thực tế `$29.99` | Failed — cùng Assert, cùng giá trị |
+
+Ảnh: `screenshots/lab4_truoc_refactor_test_explorer.png`, `lab4_sau_refactor_test_explorer.png`, `lab4_truoc_refactor_test_co_y_rot.png`, `lab4_sau_refactor_test_co_y_rot.png`.
+
+Hai test cố ý rớt vẫn rớt đúng chỗ cũ chứng tỏ Assert vẫn còn hiệu lực, test không bị "xanh rỗng".
+
+## Bài sắp xếp giá dùng POM + chaining (Phần D)
+
+```csharp
+InventoryPage trangSanPham = new LoginPage(driver).Mo()
+    .DangNhap("standard_user", "secret_sauce")
+    .SapXep("lohi");
+List<decimal> prices = trangSanPham.LayDanhSachGia();
+
+Assert.That(prices, Is.Ordered.Ascending);
+```
+
+Test Bài 3 gốc có nhiều Assert hơn; tất cả vẫn còn: dropdown đang chọn đúng, có 6 giá, so với danh sách đã sắp (`prices.Order()`), `Is.Ordered.Ascending`, giá đầu là min, giá cuối là max. Dữ liệu cuối chuỗi là `List<decimal>`, test không còn phần tử web. Kết quả `SortPriceLowToHigh_PricesShouldBeAscending` Passed trong ảnh Test Explorer ở Phần C.
+
+## Thẩm định AI (Phần E)
+
+Tài liệu gốc: prompt ở `docs/lab4_prompt_phanE.md`, code AI trả về nguyên văn ở `docs/lab4_ai_output/` (đuôi `.txt` để Visual Studio không biên dịch).
+
+**Cách làm:** soạn prompt nêu rõ 8 quy ước (cấu trúc thư mục, `BasePage`, kế thừa, locator private, tên theo hành vi, không Assert trong Page, không trả `IWebElement`, không còn "By" trong test, giữ nguyên hành vi) kèm nguyên file `LoginTests.cs` của Lab 2. Giao cho một agent AI riêng (Claude, bắt đầu từ ngữ cảnh trống, không thấy code Page Object do nhóm tự viết) refactor 1 file. Agent trả về 4 file: `BasePage.cs`, `LoginPage.cs`, `InventoryPage.cs`, `LoginTests.cs`.
+
+**AI làm đúng** (đã kiểm): 3 phép thử cứng đều đạt (không "By" trong test, không Assert trong Page, không trả `IWebElement`); `BasePage` abstract có `driver`, `wait`, `Tim`; locator `private readonly By`; `DangNhap` trả `InventoryPage`. Nhóm chép 4 file vào project tạm, build và chạy: **3/3 test Passed**.
+
+**AI làm sai hoặc chưa đúng quy ước:**
+
+1. **Giữ `ImplicitWait` trong test** (`LoginTests.cs.txt` dòng 26) trong khi `BasePage.Tim` dùng Explicit Wait. Trộn hai loại chờ là điều Bài 3 đã cảnh báo: mỗi lần `FindElement` bên trong vòng chờ lại bị Implicit Wait giữ thêm tối đa 5 giây nên thời gian chờ thực tế không còn là 10 giây. (Nhóm chưa đo số giây cụ thể; đây là hành vi Selenium đã biết, test vẫn Passed vì các phần tử đều có mặt.)
+2. **`DaHienThi()` không làm đúng tên** (`InventoryPage.cs.txt` dòng 19): `return Tim(danhSachSanPham) != null;`. `Tim` không bao giờ trả `null` (hoặc trả phần tử, hoặc ném `WebDriverTimeoutException`), nên hàm **không bao giờ trả `false`** và không kiểm tra phần tử có `Displayed`. Trong test AI còn gọi `inventoryPage.DaHienThi();` rồi bỏ qua giá trị trả về. Hệ quả: tên hàm hứa kiểm tra "đã hiển thị" nhưng thực tế không kiểm gì ngoài việc tìm thấy.
+3. **Trong Page dùng `driver.FindElements` trực tiếp** (`InventoryPage.cs.txt` dòng 37), trái quy ước "dùng `Tim(locator)` thay cho `driver.FindElement(locator)`". Cách làm còn lạ: `Tim(moiSanPham)` chỉ chờ phần tử đầu tiên rồi mới lấy cả danh sách, và 2 hàm `LayDanhSachTenSanPham`/`LayDanhSachGiaSanPham` duyệt DOM 2 lần, sau đó test ghép tên với giá bằng chỉ số `names[i]`/`prices[i]`. Nhóm dùng một hàm `LayDanhSachSanPham()` duyệt 1 lần và trả `SanPham(Ten, Gia)` để tên và giá không bị lệch.
+4. **Chưa gom phần dùng chung, vi phạm DRY**: file test vẫn tự tạo `ChromeDriver`, tự viết `SetUp`/`TearDown`, hard-code `BaseUrl`, và đọc `driver.Url` trực tiếp (không có `LoginPage.Mo()` hay `LayUrl()`). Có 5 file test thì phải chép lại 5 lần. Nhóm đưa phần này vào `Tests/TestBase.cs` và `BasePage.LayUrl()`.
+
+Không có lỗi nào trong 4 điểm trên làm test rớt, nên chỉ bắt được nhờ **đọc code** chứ không phải nhờ chạy test — đây là lý do cần thẩm định, không chỉ nhìn kết quả xanh.
+
+**Bài học:** AI làm đúng các tiêu chí kiểm bằng máy (tìm "By", tìm "Assert") nhưng bỏ sót các quy ước về ý nghĩa (tên hàm có đúng việc nó làm không, có trộn hai kiểu chờ không, có lặp code không).
+
+## Cách chạy
+
+Mở `Lab1_KiemThuAI.sln` bằng Visual Studio → **Test → Test Explorer** (`Ctrl+E, T`) → **Run All Tests**. Hai test `[Explicit]` chọn riêng rồi bấm **Run**. Dùng dòng lệnh: `dotnet test`.
+
+---
+
 # Lab 3 — Xử lý các tình huống thực tế phức tạp
 
 Làm tiếp trên repo của Lab 1–2. Code Lab 3 nằm trong `FirstTests/Lab3/`, dùng lớp cơ sở `Lab3TestBase` chỉ có **Explicit Wait** (`WebDriverWait`, 10 giây), không bật Implicit Wait, không dùng `Thread.Sleep`. Đã thêm gói `Selenium.Support`.

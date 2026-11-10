@@ -1,0 +1,22 @@
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
+
+namespace FirstTests.Pages;
+
+public abstract class BasePage
+{
+    protected readonly IWebDriver driver;
+    protected readonly WebDriverWait wait;
+
+    protected BasePage(IWebDriver driver)
+    {
+        this.driver = driver;
+        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+    }
+
+    /// <summary>Tìm phần tử kèm chờ tối đa 10 giây.</summary>
+    protected IWebElement Tim(By locator)
+    {
+        return wait.Until(d => d.FindElement(locator));
+    }
+}

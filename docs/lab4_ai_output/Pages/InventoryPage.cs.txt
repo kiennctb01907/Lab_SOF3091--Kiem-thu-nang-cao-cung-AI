@@ -1,0 +1,43 @@
+using OpenQA.Selenium;
+
+namespace FirstTests.Pages;
+
+public class InventoryPage : BasePage
+{
+    private readonly By danhSachSanPham = By.CssSelector("[data-test='inventory-list']");
+    private readonly By moiSanPham = By.CssSelector("[data-test='inventory-item']");
+    private readonly By tenSanPham = By.CssSelector("[data-test='inventory-item-name']");
+    private readonly By giaSanPham = By.CssSelector("[data-test='inventory-item-price']");
+
+    public InventoryPage(IWebDriver driver) : base(driver)
+    {
+    }
+
+    /// <summary>Chờ danh sách sản phẩm hiện ra; trang đã hiển thị thì trả về true.</summary>
+    public bool DaHienThi()
+    {
+        return Tim(danhSachSanPham) != null;
+    }
+
+    public List<string> LayDanhSachTenSanPham()
+    {
+        return LayChuTrongTungSanPham(tenSanPham);
+    }
+
+    public List<string> LayDanhSachGiaSanPham()
+    {
+        return LayChuTrongTungSanPham(giaSanPham);
+    }
+
+    // Lấy thông tin BÊN TRONG từng sản phẩm bằng item.FindElement
+    private List<string> LayChuTrongTungSanPham(By locatorBenTrong)
+    {
+        Tim(moiSanPham);
+        var ketQua = new List<string>();
+        foreach (IWebElement item in driver.FindElements(moiSanPham))
+        {
+            ketQua.Add(item.FindElement(locatorBenTrong).Text);
+        }
+        return ketQua;
+    }
+}
