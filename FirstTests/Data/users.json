@@ -46,5 +46,11 @@
     "Password": "secret_sauce",
     "ThanhCong": true,
     "GhiChu": "Tài khoản lỗi giao diện nhưng vẫn đăng nhập được"
+  },
+  {
+    "Username": "visual_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Bộ thêm sau: chỉ sửa users.json, không sửa file .cs nào"
   }
 ]
