@@ -1,0 +1,50 @@
+[
+  {
+    "Username": "standard_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Tài khoản chuẩn, phải vào được trang sản phẩm"
+  },
+  {
+    "Username": "locked_out_user",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Tài khoản bị khóa, báo Sorry, this user has been locked out"
+  },
+  {
+    "Username": "",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Ca biên: bỏ trống ô Username, báo Username is required"
+  },
+  {
+    "Username": "standard_user",
+    "Password": "",
+    "ThanhCong": false,
+    "GhiChu": "Ca biên: bỏ trống ô Password, báo Password is required"
+  },
+  {
+    "Username": " standard_user ",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Ca biên: thừa khoảng trắng hai đầu, saucedemo không tự cắt nên không đăng nhập được"
+  },
+  {
+    "Username": "' OR '1'='1",
+    "Password": "' OR '1'='1",
+    "ThanhCong": false,
+    "GhiChu": "Ca biên: ký tự đặc biệt kiểu SQL injection, phải báo sai tài khoản"
+  },
+  {
+    "Username": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Ca biên: Username dài 300 ký tự, trang không được lỗi, phải báo sai tài khoản"
+  },
+  {
+    "Username": "problem_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Tài khoản lỗi giao diện nhưng vẫn đăng nhập được"
+  }
+]
