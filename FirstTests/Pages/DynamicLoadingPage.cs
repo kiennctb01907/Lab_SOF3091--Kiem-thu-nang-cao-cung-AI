@@ -2,10 +2,10 @@ using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
-/// <summary>Trang https://the-internet.herokuapp.com/dynamic_loading/2 — nội dung chỉ xuất hiện vài giây SAU khi bấm Start.</summary>
+/// <summary>Trang dynamic_loading/2 trên the-internet (TheInternetUrl trong appsettings.json) — nội dung chỉ xuất hiện vài giây SAU khi bấm Start.</summary>
 public class DynamicLoadingPage : BasePage
 {
-    public const string Url = "https://the-internet.herokuapp.com/dynamic_loading/2";
+    private string Url => cfg.TheInternetUrl + "dynamic_loading/2";
 
     private readonly By nutStart = By.CssSelector("#start button");
     private readonly By loiChao = By.Id("finish");

@@ -1,26 +1,18 @@
+using FirstTests.Core;
 using OpenQA.Selenium;
 
-namespace FirstTests;
+namespace FirstTests.Tests;
 
 /// <summary>
-/// Lab 1 - Phần B (mở rộng): Kịch bản Selenium thứ hai trên trang example.com.
-/// Mở Chrome -> điều hướng -> đọc và in tiêu đề + đoạn văn đầu tiên -> Assert -> Quit().
+/// Lab 1 - Phần B (mở rộng): kịch bản thứ hai trên example.com, chuyển sang kế thừa BaseTest ở Lab 5.
 /// </summary>
 [TestFixture]
-public class SecondSeleniumTest
+public class SecondSeleniumTest : BaseTest
 {
-    private IWebDriver driver = null!;
-
-    [SetUp]
-    public void SetUp()
-    {
-        driver = DriverFactory.CreateChromeDriver();
-    }
-
     [Test]
     public void OpenExampleDomain_TitleAndContentShouldMatch()
     {
-        driver.Navigate().GoToUrl("https://example.com/");
+        driver.Navigate().GoToUrl(cfg.ExampleUrl);
 
         string title = driver.Title;
         // Lưu ý: example.com hiện không còn thẻ <h1>, nội dung nằm trong thẻ <p> đầu tiên.
@@ -34,12 +26,5 @@ public class SecondSeleniumTest
             Assert.That(firstParagraph, Does.Contain("documentation examples"),
                 "Đoạn văn đầu tiên phải giới thiệu domain dùng cho ví dụ trong tài liệu");
         });
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        driver?.Quit();
-        driver?.Dispose();
     }
 }

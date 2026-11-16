@@ -7,8 +7,6 @@ namespace FirstTests.Pages;
 /// <summary>Trang danh sách sản phẩm sau khi đăng nhập — nghiệp vụ: xem, sắp xếp, đọc tên và giá.</summary>
 public class InventoryPage : BasePage
 {
-    public const string Url = LoginPage.Url + "inventory.html";
-
     private readonly By danhSachSanPham = By.CssSelector("[data-test='inventory-list']");
     private readonly By moiSanPham = By.CssSelector("[data-test='inventory-item']");
     private readonly By tenSanPham = By.CssSelector("[data-test='inventory-item-name']");
@@ -17,18 +15,14 @@ public class InventoryPage : BasePage
 
     public InventoryPage(IWebDriver driver) : base(driver) { }
 
-    /// <summary>Người dùng có nhìn thấy danh sách sản phẩm hay không (chờ tối đa 10 giây).</summary>
-    public bool DaHienThi()
-    {
-        try
-        {
-            return wait.Until(d => d.FindElement(danhSachSanPham).Displayed);
-        }
-        catch (WebDriverTimeoutException)
-        {
-            return false;
-        }
-    }
+    /// <summary>Địa chỉ trang sản phẩm, ghép từ BaseUrl trong config.</summary>
+    public string Url => cfg.BaseUrl + "inventory.html";
+
+    /// <summary>
+    /// Người dùng có vào được trang sản phẩm hay không. Trả về false (không ném lỗi) khi đăng nhập thất bại,
+    /// chỉ chờ CheckTimeoutSeconds giây để ca nghịch không phải chờ hết TimeoutSeconds.
+    /// </summary>
+    public bool DaHienThi() => CoHienThi(danhSachSanPham);
 
     /// <summary>Người dùng chọn kiểu sắp xếp theo value của ô chọn (az, za, lohi, hilo).</summary>
     public InventoryPage SapXep(string value)

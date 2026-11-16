@@ -2,10 +2,10 @@ using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
-/// <summary>Trang https://the-internet.herokuapp.com/javascript_alerts — 3 loại hộp thoại JavaScript.</summary>
+/// <summary>Trang javascript_alerts trên the-internet (TheInternetUrl trong appsettings.json) — 3 loại hộp thoại JavaScript.</summary>
 public class JsAlertsPage : BasePage
 {
-    public const string Url = "https://the-internet.herokuapp.com/javascript_alerts";
+    private string Url => cfg.TheInternetUrl + "javascript_alerts";
 
     private readonly By nutJsAlert = By.CssSelector("button[onclick='jsAlert()']");
     private readonly By nutJsConfirm = By.CssSelector("button[onclick='jsConfirm()']");

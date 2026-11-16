@@ -9,3 +9,34 @@
 | `05_test_explorer_passed.png` | Test Explorer: 2 test **Passed** | B |
 | `06_dotnet_test_passed.png` | Terminal chạy `dotnet test` → *Passed: 2* | B |
 | `07_commit_history_github.jpg` | Lịch sử commit trên GitHub (branch `main`) | C |
+
+## Lab 5
+
+| File | Nội dung | Phần |
+|---|---|---|
+| `lab5_A1_appsettings_va_cau_truc.png` | Visual Studio: `Config/appsettings.json` và cấu trúc thư mục mới trong Solution Explorer | A |
+| `lab5_A2_csproj_copy_to_output.png` | `FirstTests.csproj`: 2 gói Configuration và `CopyToOutputDirectory` cho 2 file JSON | A |
+| `lab5_A3_configreader.png` | `ConfigReader.cs` đọc file theo `AppContext.BaseDirectory` | A |
+| `lab5_A4_find_khong_con_url.png` | Find in Files `https?://` trong `*.cs` → 0 kết quả | A |
+| `lab5_B1_driverfactory_create.png` | `DriverFactory.Create` trả về `IWebDriver`, báo lỗi rõ khi sai tên | B |
+| `lab5_B2_driverfactory_options.png` | Options riêng cho Chrome / Edge / Firefox, headless áp cho cả 3 | B |
+| `lab5_B3_chrome_dang_chay.png` | Chrome đang chạy ca data-driven trên saucedemo | B |
+| `lab5_B4_chrome_ket_qua.png` | `"Browser": "Chrome"` → Run All 19/19 Passed | B |
+| `lab5_B5_edge_dang_chay.png` | Edge đang chạy ca data-driven trên saucedemo | B |
+| `lab5_B6_edge_ket_qua.png` | `"Browser": "Edge"` → Run All 19/19 Passed | B |
+| `lab5_B7_sai_ten_trinh_duyet.png` | `"Browser": "Safari"` → NotSupportedException nêu đúng tên | B |
+| `lab5_C1_basetest_setup.png` | `Core/BaseTest.cs`: SetUp đọc config, tạo driver, mở BaseUrl | C |
+| `lab5_C2_basetest_try_finally.png` | TearDown: chụp ảnh trong try, Quit/Dispose trong finally | C |
+| `lab5_C3_find_khong_con_setup.png` | Find in Files `[SetUp]`/`[TearDown]`/`new ChromeDriver` trong `Tests` → 0 kết quả | C |
+| `lab5_C4_test_co_y_rot.png` | Test cố ý rớt: Standard Output "Đã chụp ảnh khi test rớt" + file đính kèm | C |
+| `lab5_C5_anh_tu_dong_chup_khi_rot.png` | Ảnh do `ScreenshotHelper` tự chụp lúc test rớt | C |
+| `lab5_D1_testcasesource_setname.png` | `[TestCaseSource(nameof(...))]` + `SetName` trong `LoginTests.cs` | D |
+| `lab5_D2_basepage_cohienthi.png` | `BasePage.CoHienThi()` dùng FindElements, chờ 3 giây, trả false | D |
+| `lab5_D3_inventory_dahienthi.png` | `InventoryPage.DaHienThi()` đã sửa | D |
+| `lab5_D4_users_json.png` | `Data/users.json` | D |
+| `lab5_D5_truoc_8_ca.png` | Trước khi thêm dữ liệu: 8 ca DangNhap Passed | D |
+| `lab5_D6_sau_9_ca.png` | Sau khi thêm 1 bộ vào JSON: 9 ca DangNhap Passed | D |
+| `lab5_D7_commit_chi_sua_users_json.png` | Commit thêm dữ liệu chỉ sửa `users.json` | D |
+| `lab5_E1_chay_thu_du_lieu_ai.png` | Chạy thử 10 bộ AI sinh: 8 Passed, 2 Failed | E |
+| `lab5_E2_chi_tiet_ca_ai_sai.png` | Chi tiết ca AI 05 `STANDARD_USER` rớt | E |
+| `lab5_F_run_all_chrome.png` | Run All cuối cùng với Chrome: 20/20 Passed | — |

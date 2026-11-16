@@ -1,3 +1,266 @@
+# Lab 5 — Xây dựng framework: cấu trúc, cấu hình & Data-Driven Testing
+
+Nâng cấp bộ test của Bài 1–4 thành một framework nhỏ: cấu hình nằm trong file JSON, trình duyệt tạo qua `DriverFactory`, vòng đời trình duyệt gom vào `BaseTest`, còn dữ liệu đăng nhập đọc từ `Data/users.json`. Toàn bộ test chạy bằng **Test Explorer** của Visual Studio 2026, ảnh chụp nằm trong thư mục `screenshots/` (tên bắt đầu bằng `lab5_`).
+
+Tiêu chí chính của bài là **đổi trình duyệt và thêm bộ dữ liệu mà không chạm vào file `.cs` nào**. Cả hai việc này nhóm đều đã làm được, có ảnh ở phần B và phần D bên dưới.
+
+> Các phần Lab 4 trở xuống nhắc tới `Tests/TestBase.cs` và `DriverFactory.cs` ở thư mục gốc. Sau Lab 5 hai file này đã thành `Core/BaseTest.cs` và `Core/DriverFactory.cs`.
+
+## Cấu trúc thư mục
+
+```
+FirstTests/
+├── Config/
+│   ├── appsettings.json      BaseUrl, Browser, TimeoutSeconds, Headless, WindowWidth/Height...
+│   ├── TestConfig.cs         lớp ánh xạ 1-1 với file JSON
+│   └── ConfigReader.cs       đọc file 1 lần theo AppContext.BaseDirectory
+├── Core/
+│   ├── DriverFactory.cs      Create(cfg) trả về IWebDriver: Chrome / Firefox / Edge
+│   └── BaseTest.cs           [SetUp] + [TearDown] dùng chung cho mọi file test
+├── Data/
+│   ├── users.json            9 bộ dữ liệu đăng nhập
+│   └── LoginData.cs          lớp Username / Password / ThanhCong / GhiChu
+├── Pages/                    Page Object của Bài 4 (lấy URL, thời gian chờ từ config)
+├── Tests/                    7 file test, tất cả đều ": BaseTest"
+└── Utilities/
+    └── ScreenshotHelper.cs   chụp ảnh khi test Failed (tách từ Bài 3)
+```
+
+Mỗi tầng chỉ có một lý do để sửa: đổi trang web hay thời gian chờ thì sửa `appsettings.json`, thêm trình duyệt thì sửa `DriverFactory`, đổi giao diện trang thì sửa `Pages/`, thêm ca đăng nhập thì sửa `users.json`.
+
+## Phần A — Tầng Config
+
+`appsettings.json` có 10 khóa, ngoài 4 khóa bắt buộc (`BaseUrl`, `Browser`, `TimeoutSeconds`, `Headless`) còn có `WindowWidth`, `WindowHeight`, `CheckTimeoutSeconds` (thời gian chờ ngắn cho các hàm hỏi CÓ/KHÔNG) và URL của 3 trang phụ dùng ở Bài 1 và Bài 3 (`TheInternetUrl`, `SeleniumHomeUrl`, `ExampleUrl`). Nhờ vậy cả 7 file test đều không còn URL viết cứng.
+
+```json
+{
+  "BaseUrl": "https://www.saucedemo.com/",
+  "Browser": "Chrome",
+  "TimeoutSeconds": 10,
+  "CheckTimeoutSeconds": 3,
+  "Headless": false,
+  "WindowWidth": 1366,
+  "WindowHeight": 768,
+  ...
+}
+```
+
+- `FirstTests.csproj` thêm 2 gói `Microsoft.Extensions.Configuration.Json` và `.Binder` (10.0.12), và khai báo `CopyToOutputDirectory = PreserveNewest` cho **cả** `Config\appsettings.json` lẫn `Data\users.json`.
+- `ConfigReader` lấy đường dẫn theo `AppContext.BaseDirectory` (luôn là `bin\Debug\net10.0\`) chứ không theo `Directory.GetCurrentDirectory()`. Nếu thiếu file thì báo rõ là kiểm tra lại `CopyToOutputDirectory`.
+- Kiểm tra bằng **Find in Files** (`Ctrl+Shift+F`) của Visual Studio: tìm regex `https?://` trong `FirstTests`, kiểu file `*.cs` → **0 kết quả trên 19 file** (ảnh `lab5_A4_find_khong_con_url.png`).
+
+| appsettings.json + cấu trúc | CopyToOutputDirectory trong .csproj |
+|---|---|
+| ![](screenshots/lab5_A1_appsettings_va_cau_truc.png) | ![](screenshots/lab5_A2_csproj_copy_to_output.png) |
+
+![Find in Files không còn URL](screenshots/lab5_A4_find_khong_con_url.png)
+
+## Phần B — Driver Factory
+
+```csharp
+public static IWebDriver Create(TestConfig cfg)
+{
+    IWebDriver driver = cfg.Browser.Trim().ToLowerInvariant() switch
+    {
+        "chrome"  => new ChromeDriver(ChromeOpts(cfg)),
+        "firefox" => new FirefoxDriver(FirefoxOpts(cfg)),
+        "edge"    => new EdgeDriver(EdgeOpts(cfg)),
+        _ => throw new NotSupportedException(
+            $"Trình duyệt \"{cfg.Browser}\" không được hỗ trợ. " +
+            "Khóa Browser trong appsettings.json chỉ nhận: Chrome, Firefox, Edge.")
+    };
+    driver.Manage().Window.Size = new Size(cfg.WindowWidth, cfg.WindowHeight);
+    return driver;
+}
+```
+
+- Hàm trả về `IWebDriver`, nên `BaseTest` và các Page không biết (và không cần biết) đang chạy trình duyệt nào.
+- Headless áp cho cả 3 trình duyệt, mỗi cái đúng cú pháp của nó: Chrome/Edge dùng `--headless=new` và `--window-size=W,H`; Firefox dùng `--headless` và `--width` / `--height`. Kích thước cửa sổ đặt tường minh, không dùng `Maximize()`.
+- Máy nhóm không cài Firefox nên phần chạy thật dùng **Chrome + Edge** (đề cho phép). Nhánh Firefox vẫn có đủ `FirefoxOpts(cfg)`.
+
+**Cùng một code, chỉ đổi 1 chữ trong `appsettings.json`**: `"Browser": "Chrome"` → `"Browser": "Edge"`, bấm **Run All Tests** trong Test Explorer. Cả hai lần đều **19/19 Passed** (2 test `[Explicit]` cố ý rớt của Bài 3 không tự chạy).
+
+| Chrome | Edge |
+|---|---|
+| ![](screenshots/lab5_B3_chrome_dang_chay.png) | ![](screenshots/lab5_B5_edge_dang_chay.png) |
+| ![](screenshots/lab5_B4_chrome_ket_qua.png) | ![](screenshots/lab5_B6_edge_ket_qua.png) |
+
+Thử gõ sai thành `"Safari"`: test rớt ngay với thông báo nêu đúng tên bị gõ:
+
+```
+System.NotSupportedException : Trình duyệt "Safari" không được hỗ trợ. Khóa Browser trong appsettings.json chỉ nhận: Chrome, Firefox, Edge.
+```
+
+![](screenshots/lab5_B7_sai_ten_trinh_duyet.png)
+
+## Phần C — BaseTest
+
+```csharp
+public abstract class BaseTest
+{
+    protected IWebDriver driver = null!;
+    protected TestConfig cfg = null!;
+
+    [SetUp]
+    public void KhoiTaoTrinhDuyet()
+    {
+        cfg = ConfigReader.Get();
+        driver = DriverFactory.Create(cfg);
+        driver.Navigate().GoToUrl(cfg.BaseUrl);
+    }
+
+    [TearDown]
+    public void DongTrinhDuyet()
+    {
+        try
+        {
+            if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && driver != null)
+            {
+                string duongDan = ScreenshotHelper.Chup(driver, TestContext.CurrentContext.Test.Name);
+                TestContext.AddTestAttachment(duongDan, "Ảnh chụp màn hình lúc test thất bại");
+            }
+        }
+        catch (Exception ex) { Console.WriteLine($"Không chụp được ảnh: {ex.Message}"); }
+        finally
+        {
+            driver?.Quit();
+            driver?.Dispose();
+        }
+    }
+}
+```
+
+- Chụp ảnh nằm trong `try`, `Quit()`/`Dispose()` nằm trong `finally`: chụp ảnh có lỗi thì trình duyệt vẫn được đóng.
+- Cả 7 file test đều `: BaseTest`, kể cả 2 test của Bài 1 (`FirstSeleniumTest`, `SecondSeleniumTest`) trước đây tự `new ChromeDriver`. `LoginTests` bỏ luôn `[SetUp] MoTrangDangNhap()` vì `BaseTest` đã mở `BaseUrl`.
+- Find in Files regex `\[SetUp\]|\[TearDown\]|new ChromeDriver` trong `FirstTests\Tests` → **0 kết quả trên 7 file** (ảnh `lab5_C3_find_khong_con_setup.png`).
+- Chạy riêng test `[Explicit]` cố ý rớt của Bài 3: Test Explorer báo Failed, phần *Standard Output* có dòng "Đã chụp ảnh khi test rớt", có file đính kèm, ảnh nằm ở `bin\Debug\net10.0\FailureScreenshots\`. Sau khi chạy xong kiểm tra không còn tiến trình `chromedriver` nào chạy ngầm.
+
+| try / finally | Test cố ý rớt có ảnh đính kèm |
+|---|---|
+| ![](screenshots/lab5_C2_basetest_try_finally.png) | ![](screenshots/lab5_C4_test_co_y_rot.png) |
+
+## Phần D — Data-Driven Testing
+
+`Data/users.json` lúc đầu có **8 bộ**, trong đó có 5 ca biên:
+
+| # | Username | Password | ThanhCong | Ghi chú |
+|---|---|---|---|---|
+| 01 | `standard_user` | `secret_sauce` | true | tài khoản chuẩn |
+| 02 | `locked_out_user` | `secret_sauce` | false | bị khóa |
+| 03 | *(trống)* | `secret_sauce` | false | **biên**: ô Username trống |
+| 04 | `standard_user` | *(trống)* | false | **biên**: ô Password trống |
+| 05 | `" standard_user "` | `secret_sauce` | false | **biên**: thừa khoảng trắng 2 đầu |
+| 06 | `' OR '1'='1` | `' OR '1'='1` | false | **biên**: ký tự đặc biệt kiểu SQL injection |
+| 07 | `aaa…a` (300 ký tự) | `secret_sauce` | false | **biên**: chuỗi rất dài |
+| 08 | `problem_user` | `secret_sauce` | true | lỗi giao diện nhưng vẫn vào được |
+
+```csharp
+public static IEnumerable<TestCaseData> DuLieuDangNhap()
+{
+    List<LoginData> danhSach = LoginData.DocTuFile();
+    for (int i = 0; i < danhSach.Count; i++)
+    {
+        LoginData u = danhSach[i];
+        yield return new TestCaseData(u)
+            .SetName($"DangNhap_{i + 1:00}_{TenGon(u.Username)}{(u.Password.Length == 0 ? "_MatKhauTrong" : "")}")
+            .SetDescription(u.GhiChu);
+    }
+}
+
+[TestCaseSource(nameof(DuLieuDangNhap))]
+public void DangNhap_TheoDuLieu(LoginData u) { ... }
+```
+
+- Nguồn dữ liệu là `static`, trả về `IEnumerable<TestCaseData>`, gọi qua `nameof(...)`.
+- Tên ca có số thứ tự nên 2 bộ cùng Username không bị trùng tên. `TenGon` bỏ ký tự lạ và cắt chuỗi dài (ca 300 ký tự hiện thành `DangNhap_07_aaaaaaaaaaaaaaaaaaaa_Dai300`).
+- Kỳ vọng cũng là dữ liệu: `ThanhCong = true` thì Assert vào được trang sản phẩm và đúng URL; `false` thì Assert không vào được, có thông báo lỗi và vẫn ở trang đăng nhập.
+- **Sửa `InventoryPage.DaHienThi()`**: bản Bài 4 dùng `wait.Until(d => d.FindElement(...))` chờ 10 giây. Giờ gọi hàm chung `CoHienThi()` trong `BasePage`: dùng `FindElements` (trả danh sách rỗng chứ không ném lỗi), chỉ chờ `CheckTimeoutSeconds` = 3 giây và bắt `WebDriverTimeoutException` để trả `false`. `LoginPage.ThongBaoLoiDaHienThi()` cũng đổi sang `CoHienThi()`. Mỗi ca nghịch giờ chạy khoảng 5 giây.
+
+**Thêm dữ liệu không sửa code**: thêm bộ thứ 9 (`visual_user`, ThanhCong = true) vào `users.json` ngay trong editor của Visual Studio, bấm **Build > Rebuild Solution** để Test Explorer quét lại, rồi chạy lại nhóm `DangNhap`:
+
+| | Trước | Sau |
+|---|---|---|
+| Số ca `DangNhap_*` | 8 | 9 |
+| Kết quả | 8 Passed | 9 Passed |
+| File thay đổi | | chỉ `FirstTests/Data/users.json` (+6 dòng) |
+
+Lưu ý nhỏ: nếu chỉ sửa JSON rồi bấm Run ngay thì Test Explorer vẫn chạy 8 ca, vì file `.dll` không đổi nên VS không quét lại danh sách test. Rebuild xong mới hiện ca `DangNhap_09_visual_user`.
+
+| Trước: 8 ca | Sau: 9 ca |
+|---|---|
+| ![](screenshots/lab5_D5_truoc_8_ca.png) | ![](screenshots/lab5_D6_sau_9_ca.png) |
+
+Commit `test: thêm bộ dữ liệu visual_user vào users.json` mở trong cửa sổ Git Repository của VS: **1 change, chỉ có users.json**.
+
+![](screenshots/lab5_D7_commit_chi_sua_users_json.png)
+
+## Phần E — Thẩm định dữ liệu AI sinh
+
+### Prompt đã dùng
+
+Nhờ Claude (AI) sinh dữ liệu, prompt như sau:
+
+> Mình đang viết test Selenium C# data-driven cho form đăng nhập của trang https://www.saucedemo.com. Sinh giúp mình 10 bộ dữ liệu test dạng mảng JSON, mỗi phần tử có đúng 4 khóa:
+> - `Username` (string)
+> - `Password` (string)
+> - `ThanhCong` (bool): true nếu đăng nhập xong phải vào được trang sản phẩm, false nếu phải ở lại trang đăng nhập và báo lỗi
+> - `GhiChu` (string): mô tả ngắn ca test
+>
+> Có cả ca thuận, ca nghịch và ca biên. Chỉ trả về JSON.
+
+### Kết quả AI trả về
+
+```json
+[
+  { "Username": "standard_user", "Password": "secret_sauce", "ThanhCong": true,
+    "GhiChu": "AI 01: Đăng nhập hợp lệ với tài khoản chuẩn" },
+  { "Username": "locked_out_user", "Password": "secret_sauce", "ThanhCong": false,
+    "GhiChu": "AI 02: Tài khoản bị khóa, hiển thị thông báo lỗi" },
+  { "Username": "problem_user", "Password": "secret_sauce", "ThanhCong": true,
+    "GhiChu": "AI 03: Tài khoản có lỗi giao diện nhưng vẫn đăng nhập được" },
+  { "Username": "performance_glitch_user", "Password": "secret_sauce", "ThanhCong": true,
+    "GhiChu": "AI 04: Tài khoản phản hồi chậm nhưng cuối cùng vẫn đăng nhập thành công" },
+  { "Username": "STANDARD_USER", "Password": "secret_sauce", "ThanhCong": true,
+    "GhiChu": "AI 05: Tên đăng nhập không phân biệt chữ hoa chữ thường" },
+  { "Username": "  standard_user", "Password": "secret_sauce", "ThanhCong": true,
+    "GhiChu": "AI 06: Hệ thống tự loại bỏ khoảng trắng ở đầu tên đăng nhập" },
+  { "Username": "", "Password": "", "ThanhCong": false,
+    "GhiChu": "AI 07: Bỏ trống cả hai trường, hiển thị lỗi Username is required" },
+  { "Username": "standard_user", "Password": "SECRET_SAUCE", "ThanhCong": false,
+    "GhiChu": "AI 08: Mật khẩu phân biệt chữ hoa chữ thường" },
+  { "Username": "<script>alert('xss')</script>", "Password": "secret_sauce", "ThanhCong": false,
+    "GhiChu": "AI 09: Chèn mã script vào ô Username, không được thực thi và phải báo lỗi" },
+  { "Username": "standard_user", "Password": "wrong_password", "ThanhCong": false,
+    "GhiChu": "AI 10: Nhập sai mật khẩu lần thứ 3 liên tiếp thì tài khoản bị khóa tạm thời" }
+]
+```
+
+### Cách kiểm tra
+
+Nhóm không tin ngay mà dán thử cả 10 bộ vào `users.json` trên Visual Studio, Rebuild rồi chạy nhóm `DangNhap` (không commit bản này, chạy xong trả `users.json` về 9 bộ của nhóm). Kết quả: **8 Passed, 2 Failed**.
+
+| Chạy thử 10 bộ AI | Chi tiết ca AI 05 |
+|---|---|
+| ![](screenshots/lab5_E1_chay_thu_du_lieu_ai.png) | ![](screenshots/lab5_E2_chi_tiet_ca_ai_sai.png) |
+
+### Các bộ KHÔNG dùng được
+
+1. **AI 05 — `STANDARD_USER`, kỳ vọng `true`: sai với hành vi thật.** Saucedemo phân biệt hoa thường ở Username, gõ `STANDARD_USER` thì trang báo *"Username and password do not match any user in this service"*. Test rớt: `Phải vào được trang sản phẩm... Expected: True But was: False`. AI tự suy ra "username không phân biệt hoa thường" vì nhiều hệ thống làm vậy, nhưng trang này thì không.
+2. **AI 06 — `"  standard_user"` (2 dấu cách đầu), kỳ vọng `true`: sai với hành vi thật.** Saucedemo không tự cắt khoảng trắng, nên vẫn báo sai tài khoản và test rớt giống ca 05. Ca biên khoảng trắng của nhóm (bộ 05 trong `users.json`) để kỳ vọng `false` là đúng.
+3. **AI 10 — "sai mật khẩu lần thứ 3 thì bị khóa tạm thời": test cho tính năng saucedemo không có.** Saucedemo không đếm số lần sai và không khóa tài khoản. Ca này vẫn **Passed**, nhưng là Passed vì nhập sai mật khẩu thì đương nhiên báo lỗi, chứ không phải vì có khóa tài khoản. Hơn nữa mỗi ca test mở một trình duyệt mới nên không thể có "lần thứ 3 liên tiếp". Ghi chú hứa kiểm một điều mà test không hề kiểm, giữ lại chỉ gây hiểu nhầm. Đây là loại nguy hiểm nhất vì chạy test **không** phát hiện ra, phải đọc mới thấy.
+
+### Các bộ dùng được nhưng cần lưu ý
+
+- **AI 04 — `performance_glitch_user`**: kỳ vọng đúng, chạy Passed (7,6 giây). Nhưng tài khoản này cố ý chậm, nếu mạng chậm hơn thì `DaHienThi()` chỉ chờ 3 giây có thể trả `false` trước khi trang kịp hiện. Muốn dùng lâu dài thì nên tăng `CheckTimeoutSeconds` hoặc để ca này chờ theo `TimeoutSeconds`.
+- **AI 09 — chèn `<script>`**: kết quả đúng (báo sai tài khoản), nhưng ghi chú "không được thực thi" thì test không kiểm (không bắt alert). Nếu dùng nên sửa ghi chú cho đúng với cái test thật sự kiểm.
+- **AI 07** trùng ý với ca trống Username của nhóm; **AI 01, 02, 03** trùng với tài khoản có sẵn trên trang, không có gì mới.
+
+### Nhận xét
+
+AI sinh dữ liệu đúng định dạng, đúng tên khóa (`Username`, `ThanhCong`...) nên dán vào là chạy được ngay, không bị lỗi lệch tên khóa. Phần sai nằm ở **kỳ vọng**: AI đoán hành vi của trang theo "thường thì hệ thống sẽ làm vậy" (không phân biệt hoa thường, tự cắt khoảng trắng, khóa sau 3 lần sai) chứ không biết saucedemo thật sự làm gì. 2 ca sai kỳ vọng thì chạy test là lộ ngay, còn ca bịa tính năng (AI 10) lại Passed nên chỉ phát hiện được khi đọc kỹ từng dòng ghi chú.
+
+---
+
 # Lab 4 — OOP trong kiểm thử & Page Object Model (POM)
 
 Refactor bộ test của Bài 2–3 (trang https://www.saucedemo.com và https://the-internet.herokuapp.com) sang **Page Object Model** mà không đổi hành vi. Chạy test bằng **Test Explorer** của Visual Studio 2026.

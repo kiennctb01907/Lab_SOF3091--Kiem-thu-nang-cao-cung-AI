@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 
 namespace FirstTests.Tests;
@@ -7,7 +8,7 @@ namespace FirstTests.Tests;
 /// Phần tử "Hello World!" chỉ được JavaScript tạo ra vài giây SAU khi bấm Start.
 /// </summary>
 [TestFixture]
-public class DynamicLoadingTests : TestBase
+public class DynamicLoadingTests : BaseTest
 {
     /// <summary>
     /// Bước 1: đọc lời chào NGAY sau khi bấm Start, không chờ -> rớt với NoSuchElementException.
