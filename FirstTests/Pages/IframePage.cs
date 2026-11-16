@@ -2,10 +2,10 @@ using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
-/// <summary>Trang https://the-internet.herokuapp.com/iframe — trình soạn thảo TinyMCE nằm trong iframe.</summary>
+/// <summary>Trang iframe trên the-internet (TheInternetUrl trong appsettings.json) — trình soạn thảo TinyMCE nằm trong iframe.</summary>
 public class IframePage : BasePage
 {
-    public const string Url = "https://the-internet.herokuapp.com/iframe";
+    private string Url => cfg.TheInternetUrl + "iframe";
 
     private readonly By khungTrinhSoan = By.Id("mce_0_ifr");
     private readonly By thanTrinhSoan = By.Id("tinymce");
