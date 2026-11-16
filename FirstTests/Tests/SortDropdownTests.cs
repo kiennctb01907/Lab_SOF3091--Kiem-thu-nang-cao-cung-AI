@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 
 namespace FirstTests.Tests;
@@ -7,12 +8,12 @@ namespace FirstTests.Tests;
 /// chọn sắp xếp "Price (low to high)" và Assert danh sách giá THỰC SỰ tăng dần.
 /// </summary>
 [TestFixture]
-public class SortDropdownTests : TestBase
+public class SortDropdownTests : BaseTest
 {
     [Test]
     public void SortPriceLowToHigh_PricesShouldBeAscending()
     {
-        var trangDangNhap = new LoginPage(driver).Mo();
+        var trangDangNhap = new LoginPage(driver);
 
         // Nối chuỗi lời gọi: đăng nhập -> sắp xếp giá thấp đến cao
         InventoryPage trangSanPham = trangDangNhap.DangNhap("standard_user", "secret_sauce").SapXep("lohi");

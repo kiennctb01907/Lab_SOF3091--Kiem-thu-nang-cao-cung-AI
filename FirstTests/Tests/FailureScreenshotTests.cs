@@ -1,18 +1,19 @@
-﻿using FirstTests.Pages;
+﻿using FirstTests.Core;
+using FirstTests.Pages;
 
 namespace FirstTests.Tests;
 
 /// <summary>
-/// Lab 3 - Phần D: test CỐ Ý rớt để kiểm tra cơ chế chụp ảnh trong [TearDown] của TestBase.
+/// Lab 3 - Phần D: test CỐ Ý rớt để kiểm tra cơ chế chụp ảnh khi Failed của BaseTest (Core/BaseTest.cs + Utilities/ScreenshotHelper.cs).
 /// Gắn [Explicit] để Run All vẫn xanh; chạy riêng test này sẽ sinh ảnh FailureScreenshots/{tên test}.png.
 /// </summary>
 [TestFixture]
-public class FailureScreenshotTests : TestBase
+public class FailureScreenshotTests : BaseTest
 {
     [Test, Explicit("Phần D: cố ý rớt để sinh ảnh chụp khi Failed")]
     public void InventoryFirstPrice_DeliberatelyWrongExpectation_Fails()
     {
-        InventoryPage trangSanPham = new LoginPage(driver).Mo().DangNhap("standard_user", "secret_sauce");
+        InventoryPage trangSanPham = new LoginPage(driver).DangNhap("standard_user", "secret_sauce");
 
         string giaDauTien = trangSanPham.LayGiaSanPhamDauTien();
 

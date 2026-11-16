@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 
 namespace FirstTests.Tests;
@@ -6,7 +7,7 @@ namespace FirstTests.Tests;
 /// Lab 3 - Phần C, viết lại bằng Page Object Model: xử lý 3 loại JavaScript alert và gõ chữ vào trình soạn thảo trong iframe.
 /// </summary>
 [TestFixture]
-public class AlertIframeTests : TestBase
+public class AlertIframeTests : BaseTest
 {
     [Test]
     public void JsAlert_Accept_ShouldShowSuccessResult()
