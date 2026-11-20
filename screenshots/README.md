@@ -40,3 +40,29 @@
 | `lab5_E1_chay_thu_du_lieu_ai.png` | Chạy thử 10 bộ AI sinh: 8 Passed, 2 Failed | E |
 | `lab5_E2_chi_tiet_ca_ai_sai.png` | Chi tiết ca AI 05 `STANDARD_USER` rớt | E |
 | `lab5_F_run_all_chrome.png` | Run All cuối cùng với Chrome: 20/20 Passed | — |
+
+## Lab 6
+
+| File | Nội dung | Phần |
+|---|---|---|
+| `lab6_A1_category_trong_code.png` | `[Category]` gắn trong LoginTests.cs | A |
+| `lab6_A2_test_explorer_trait_smoke.png` | Test Explorer lọc `Trait:"Smoke"`: 5 ca | A |
+| `lab6_A3_test_explorer_tru_slow.png` | Test Explorer lọc `-Trait:"Slow"`: 23 ca | A |
+| `lab6_A4_dotnet_test_category_smoke.png` | Terminal VS: `dotnet test --filter "Category=Smoke"` → 5 succeeded | A |
+| `lab6_A5_dotnet_test_category_khac_slow.png` | Terminal VS: `dotnet test --filter "Category!=Slow"` → 23 succeeded | A |
+| `lab6_B1_lop_log.png` | Utilities/Log.cs | B |
+| `lab6_B2_basetest_ghi_log.png` | BaseTest ghi BẮT ĐẦU / OK / RỚT | B |
+| `lab6_B3_find_khong_log_trong_tests.png` | Find in Files `Log.` trong Tests: 0 kết quả | B |
+| `lab6_B4_nhat_ky_co_ca_rot.png` | Nhật ký thật có [INFO] và [ERROR] | B |
+| `lab6_C1_dotnet_test_trx.png` | `dotnet test --logger "trx;LogFileName=ketqua.trx"` | C |
+| `lab6_C2_trxlog2html.png` | trxlog2html sinh ketqua.html | C |
+| `lab6_C3_bao_cao_html.png` | Trang báo cáo HTML: 27 ca, 25 passed, 0 failed | C |
+| `lab6_D1_tuan_tu_1p7.png` | Chạy tuần tự: 25 Passed, 1,7 phút | D |
+| `lab6_D2_parallel_settings.png` | ParallelSettings.cs | D |
+| `lab6_D3_song_song_rot_ngau_nhien.png` | Song song lần 3 trước khi sửa: 1 ca rớt | D |
+| `lab6_D4_chi_tiet_ca_rot_ioexception.png` | Chi tiết: IOException khi ghi file log | D |
+| `lab6_D5_song_song_sau_sua_lan1.png` | Song song sau khi sửa lần 1: 25 Passed, 1,3 phút | D |
+| `lab6_D6_song_song_sau_sua_lan2.png` | Song song sau khi sửa lần 2: 25 Passed, 1,4 phút | D |
+| `lab6_D7_song_song_sau_sua_lan3.png` | Song song sau khi sửa lần 3: 25 Passed, 1,3 phút | D |
+| `lab6_E1_chay_thu_11_ca_ai.png` | Chạy thử 11 ca AI: 5 Passed, 6 Failed | E |
+| `lab6_E2_checkout_tests_da_loc.png` | CheckoutTests.cs: 5 ca đã lọc | E |

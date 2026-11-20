@@ -1,0 +1,447 @@
+﻿<html>
+<head><meta charset="utf-8"/>
+<title>Test Report</title>
+<style type="text/css">
+html,
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+body {
+  padding: 2rem 1rem;
+  font-size: 0.85rem;
+}
+#html-content {
+  margin: 0 auto;
+  max-width: 70rem;
+}
+header {
+  display: flex;
+  align-items: center;
+}
+#title {
+  margin: 0;
+  flex-grow: 1;
+}
+#logo {
+  height: 4rem;
+}
+#timestamp {
+  color: #777;
+  margin-top: 0.5rem;
+}
+
+#summary {
+  color: #333;
+  margin: 2rem 0;
+  display: flex;
+  font-family: monospace;
+  font-size: 1rem;
+}
+#summary > div {
+  margin-right: 2rem;
+  background: #eee;
+  padding: 1rem;
+  min-width: 15rem;
+}
+#summary > div:last-child {
+  margin-right: 0;
+}
+@media only screen and (max-width: 720px) {
+  #summary {
+    flex-direction: column;
+  }
+  #summary > div {
+    margin-right: 0;
+    margin-top: 2rem;
+  }
+  #summary > div:first-child {
+    margin-top: 0;
+  }
+}
+
+.summary-total {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.summary-passed {
+  color: #4f8a10;
+  border-left: 0.4rem solid #4f8a10;
+  padding-left: 0.5rem;
+}
+.summary-failed,
+.summary-obsolete-snapshots {
+  color: #d8000c;
+  border-left: 0.4rem solid #d8000c;
+  padding-left: 0.5rem;
+}
+.summary-pending {
+  color: #9f6000;
+  border-left: 0.4rem solid #9f6000;
+  padding-left: 0.5rem;
+}
+.summary-empty {
+  color: #999;
+  border-left: 0.4rem solid #999;
+}
+
+.test-result {
+  padding: 1rem;
+  margin-bottom: 0.25rem;
+}
+.test-result:last-child {
+  border: 0;
+}
+.test-result.passed {
+  background-color: #dff2bf;
+  color: #4f8a10;
+}
+.test-result.failed {
+  background-color: #ffbaba;
+  color: #d8000c;
+}
+.test-result.pending {
+  background-color: #ffdf61;
+  color: #9f6000;
+}
+
+.test-info {
+  display: flex;
+  justify-content: space-between;
+}
+.test-method-name {
+  width: 20%;
+  text-align: left;
+  font-weight: bold;
+  word-break: break-word;
+}
+.test-title {
+  width: 40%;
+  text-align: left;
+  font-style: italic;
+}
+.test-status {
+  width: 20%;
+  text-align: right;
+}
+.test-duration {
+  width: 10%;
+  text-align: right;
+  font-size: 0.75rem;
+}
+
+.test-class-container {
+  margin-bottom: 2rem;
+}
+.test-class-info {
+  padding: 1rem;
+  background-color: #eee;
+  color: #777;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.test-class-info .class-name {
+  word-break: break-all;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: 1rem;
+}
+</style>
+</head>
+<body>
+<div id="html-content">
+    <header>
+        <h1 id="title">Test Report</h1>
+    </header>
+    <div id="metadata-container">
+        <div id="timestamp">Started: 2026-11-20T19:38:31.6866317+07:00</div>
+        <div id="summary">
+            <div id="suite-summary">
+                <div class="summary-total">Test Classes (8)</div>
+            </div>
+            <div id="test-summary">
+                <div class="summary-total">Test Cases (27)</div>
+                <div class="summary-passed">25 passed</div>
+                <div class="summary-failed summary-empty">0 failed</div>
+                <div class="summary-pending summary-empty">0 pending</div>
+            </div>
+        </div>
+    </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.AlertIframeTests</div>
+    </div>
+    <div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">Iframe_TypeIntoEditor_ThenBackToDefaultContent</div>
+              <div class="test-title">Iframe_TypeIntoEditor_ThenBackToDefaultContent</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:40.7240570</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">JsAlert_Accept_ShouldShowSuccessResult</div>
+              <div class="test-title">JsAlert_Accept_ShouldShowSuccessResult</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:08.6192260</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">JsConfirm_Dismiss_ShouldShowCancelResult</div>
+              <div class="test-title">JsConfirm_Dismiss_ShouldShowCancelResult</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:21.2853540</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">JsPrompt_SendKeysAndAccept_ShouldShowEnteredText</div>
+              <div class="test-title">JsPrompt_SendKeysAndAccept_ShouldShowEnteredText</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:05.0207330</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.CheckoutTests</div>
+    </div>
+    <div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">MaBuuChinh_BoTrong_BaoLoiBatBuoc</div>
+              <div class="test-title">MaBuuChinh_BoTrong_BaoLoiBatBuoc</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:25.0910460</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">MaBuuChinh_CoMaNhungThieuFirstName_BaoLoiFirstName</div>
+              <div class="test-title">MaBuuChinh_CoMaNhungThieuFirstName_BaoLoiFirstName</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:04.4901940</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">MaBuuChinh_DinhDangZipCong4_SangBuocHai</div>
+              <div class="test-title">MaBuuChinh_DinhDangZipCong4_SangBuocHai</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:03.8462770</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">MaBuuChinh_DongThongBaoLoi_ThongBaoBienMat</div>
+              <div class="test-title">MaBuuChinh_DongThongBaoLoi_ThongBaoBienMat</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:09.6593400</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">MaBuuChinh_HopLe5ChuSo_SangBuocHai</div>
+              <div class="test-title">MaBuuChinh_HopLe5ChuSo_SangBuocHai</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:04.3035980</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.DynamicLoadingTests</div>
+    </div>
+    <div>
+        <div class="test-result NotExecuted">
+            <div class="test-info">
+              <div class="test-method-name">Step1_FindFinishWithoutWait_Fails</div>
+              <div class="test-title">Step1_FindFinishWithoutWait_Fails</div>
+              <div class="test-status">NotExecuted</div>
+              <div class="test-duration">00:00:00.0020600</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">Step2_FindFinishWithExplicitWait_Passes</div>
+              <div class="test-title">Step2_FindFinishWithExplicitWait_Passes</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:36.5570480</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.FailureScreenshotTests</div>
+    </div>
+    <div>
+        <div class="test-result NotExecuted">
+            <div class="test-info">
+              <div class="test-method-name">InventoryFirstPrice_DeliberatelyWrongExpectation_Fails</div>
+              <div class="test-title">InventoryFirstPrice_DeliberatelyWrongExpectation_Fails</div>
+              <div class="test-status">NotExecuted</div>
+              <div class="test-duration">00:00:00.0020490</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.FirstSeleniumTest</div>
+    </div>
+    <div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">OpenSeleniumHomePage_TitleShouldContainSelenium</div>
+              <div class="test-title">OpenSeleniumHomePage_TitleShouldContainSelenium</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:04.9847910</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.LoginTests</div>
+    </div>
+    <div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_01_standard_user</div>
+              <div class="test-title">DangNhap_01_standard_user</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:05.9808440</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_02_locked_out_user</div>
+              <div class="test-title">DangNhap_02_locked_out_user</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:05.1792830</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_03_Trong</div>
+              <div class="test-title">DangNhap_03_Trong</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:05.1494120</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_04_standard_user_MatKhauTrong</div>
+              <div class="test-title">DangNhap_04_standard_user_MatKhauTrong</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:06.6899970</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_05_standard_user_CoKhoangTrang</div>
+              <div class="test-title">DangNhap_05_standard_user_CoKhoangTrang</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:07.3653510</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_06_OR11</div>
+              <div class="test-title">DangNhap_06_OR11</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:07.8306350</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_07_aaaaaaaaaaaaaaaaaaaa_Dai300</div>
+              <div class="test-title">DangNhap_07_aaaaaaaaaaaaaaaaaaaa_Dai300</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:07.8160930</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_08_problem_user</div>
+              <div class="test-title">DangNhap_08_problem_user</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:03.0740800</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">DangNhap_09_visual_user</div>
+              <div class="test-title">DangNhap_09_visual_user</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:03.3691410</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">Inventory_ShouldListSixProductsWithValidNameAndPrice</div>
+              <div class="test-title">Inventory_ShouldListSixProductsWithValidNameAndPrice</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:04.4200410</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">Login_LockedOutUser_ShouldShowErrorMessage</div>
+              <div class="test-title">Login_LockedOutUser_ShouldShowErrorMessage</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:02.8091760</div>
+            </div>
+        </div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">Login_StandardUser_ShouldGoToInventoryPage</div>
+              <div class="test-title">Login_StandardUser_ShouldGoToInventoryPage</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:02.9747340</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.SecondSeleniumTest</div>
+    </div>
+    <div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">OpenExampleDomain_TitleAndContentShouldMatch</div>
+              <div class="test-title">OpenExampleDomain_TitleAndContentShouldMatch</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:04.2276090</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div class="test-class-container">
+    <div class="test-class-info">
+        <div class="class-name">FirstTests.Tests.SortDropdownTests</div>
+    </div>
+    <div>
+        <div class="test-result Passed">
+            <div class="test-info">
+              <div class="test-method-name">SortPriceLowToHigh_PricesShouldBeAscending</div>
+              <div class="test-title">SortPriceLowToHigh_PricesShouldBeAscending</div>
+              <div class="test-status">Passed</div>
+              <div class="test-duration">00:00:04.5184250</div>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+</body>

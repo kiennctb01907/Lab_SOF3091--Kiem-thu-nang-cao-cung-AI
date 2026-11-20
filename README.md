@@ -1,3 +1,296 @@
+# Lab 6 — Test Runner, báo cáo, logging & chạy song song
+
+Làm tiếp trên framework của Bài 5. Test chạy bằng **Test Explorer** của Visual Studio 2026. Các lệnh `dotnet test` đề bài yêu cầu được gõ trong cửa sổ **Terminal của Visual Studio** (View > Terminal). Ảnh chụp nằm trong `screenshots/`, tên bắt đầu bằng `lab6_`.
+
+Những gì thêm mới:
+
+```
+FirstTests/
+├── Core/
+│   ├── BaseTest.cs           + ghi log BẮT ĐẦU ở [SetUp], OK/RỚT ở [TearDown]
+│   └── ParallelSettings.cs   [assembly: Parallelizable(Fixtures)] + LevelOfParallelism(4)
+├── Pages/CheckoutPage.cs     trang Checkout: Your Information (dùng cho Phần E)
+├── Tests/CheckoutTests.cs    5 ca ô Postal Code đã lọc từ đề xuất của AI
+└── Utilities/Log.cs          Info / Warn / Error, có thời gian + mức độ + mã luồng
+dotnet-tools.json             công cụ trxlog2html (cài cục bộ cho repo)
+docs/lab6_nhatky_mau.log      đoạn nhật ký thật (Phần B)
+docs/lab6_ketqua.html         báo cáo HTML sinh từ ketqua.trx (Phần C)
+```
+
+## Phần A — Tổ chức test với `[Category]`
+
+| Category | Gắn ở đâu | Số ca |
+|---|---|---|
+| `Smoke` | đăng nhập đúng, danh sách 6 sản phẩm, sắp xếp giá, mở trang chủ Selenium, Postal Code hợp lệ | 5 |
+| `Login` | cả class `LoginTests` (gồm 9 ca data-driven) | 13 |
+| `Checkout` | cả class `CheckoutTests` | 5 |
+| `TheInternet` | `AlertIframeTests`, `DynamicLoadingTests` | 6 |
+| `Slow` | `DynamicLoadingTests` (chờ ~10 giây) và ca iframe | 2 chạy thường |
+
+Chạy chọn lọc bằng 2 cách, kết quả giống nhau:
+
+| Điều kiện | Test Explorer (ô Search) | Terminal của VS | Kết quả |
+|---|---|---|---|
+| Chỉ Smoke | `Trait:"Smoke"` | `dotnet test FirstTests --filter "Category=Smoke"` | 5 ca, 5 Passed |
+| Bỏ Slow | `-Trait:"Slow"` | `dotnet test FirstTests --filter "Category!=Slow"` | 23 ca, 23 Passed |
+
+| `--filter "Category=Smoke"` | `--filter "Category!=Slow"` |
+|---|---|
+| ![](screenshots/lab6_A4_dotnet_test_category_smoke.png) | ![](screenshots/lab6_A5_dotnet_test_category_khac_slow.png) |
+
+## Phần B — Logging vào BaseTest
+
+`Utilities/Log.cs` có `Info`, `Warn`, `Error`. Mỗi dòng có thời gian tới mili giây, mức độ và mã luồng (để nhìn ra ca nào chạy trên luồng nào khi bật song song). Dòng log được in qua `TestContext.Progress.WriteLine`, nên thấy ngay trong terminal. Đồng thời log được ghi vào file `bin/Debug/net10.0/Logs/nhatky_yyyyMMdd.log`, mỗi lần chạy mở đầu bằng một dòng `=====`.
+
+`BaseTest` ghi `BẮT ĐẦU` ở `[SetUp]` và `OK` hoặc `RỚT` (mức `ERROR`, kèm dòng đầu của thông báo lỗi) ở `[TearDown]`. File test không gọi `Log` lần nào: tìm `Log\.(Info|Warn|Error)` trong `FirstTests\Tests` bằng Find in Files ra 0 kết quả trên 8 file.
+
+Đoạn nhật ký thật dưới đây lấy từ lần chạy thử 11 ca do AI sinh ở Phần E (5 đậu, 6 rớt). File AI đó không viết dòng log nào, toàn bộ nhật ký đến từ `BaseTest`. Bản đầy đủ nằm ở `docs/lab6_nhatky_mau.log`.
+
+```
+===== Lần chạy lúc 19:16:47 =====
+2026-11-20 19:16:47.606 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI01_MaHopLe5ChuSo_SangBuocHai | trình duyệt Chrome (headless)
+2026-11-20 19:16:49.597 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI01_MaHopLe5ChuSo_SangBuocHai (2.0s)
+2026-11-20 19:16:49.756 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI02_BoTrong_BaoLoiBatBuoc | trình duyệt Chrome (headless)
+2026-11-20 19:16:51.838 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI02_BoTrong_BaoLoiBatBuoc (2.1s)
+2026-11-20 19:16:51.963 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI03_ChiKhoangTrang_BaoLoiBatBuoc | trình duyệt Chrome (headless)
+2026-11-20 19:17:04.306 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI03_ChiKhoangTrang_BaoLoiBatBuoc (12.3s) | OpenQA.Selenium.WebDriverTimeoutException : Timed out after 10 seconds
+2026-11-20 19:17:04.363 [INFO ] [luồng 14] Đã chụp ảnh khi test rớt: FirstTests\bin\Debug\net10.0\FailureScreenshots\AI03_ChiKhoangTrang_BaoLoiBatBuoc.png
+...
+2026-11-20 19:17:22.266 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI06_QuaDai_BaoLoiDoDai | trình duyệt Chrome (headless)
+2026-11-20 19:17:24.263 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI06_QuaDai_BaoLoiDoDai (2.0s) | Mã bưu chính không được dài quá 5 ký tự
+...
+2026-11-20 19:17:29.674 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI08_DinhDangZipCong4_SangBuocHai | trình duyệt Chrome (headless)
+2026-11-20 19:17:31.849 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI08_DinhDangZipCong4_SangBuocHai (2.2s)
+```
+
+![](screenshots/lab6_B4_nhat_ky_co_ca_rot.png)
+
+Ghi chú: ca có `[Explicit]` của Bài 3 không chạy khi chọn chung với ca khác trong Test Explorer, kể cả khi lọc theo tên bằng `dotnet test --filter`. Vì vậy ca rớt trong nhật ký là ca rớt thật của dữ liệu AI.
+
+## Phần C — Báo cáo HTML
+
+Chạy trong Terminal của VS:
+
+```
+dotnet test FirstTests --logger "trx;LogFileName=ketqua.trx"
+dotnet trxlog2html -i FirstTests\TestResults\ketqua.trx -o FirstTests\TestResults\ketqua.html
+```
+
+`trxlog2html` được cài dạng local tool (`dotnet tool install trxlog2html`, ghi vào `dotnet-tools.json`), người khác clone repo về chỉ cần `dotnet tool restore`. Công cụ này build cho .NET 9 mà máy chỉ có .NET 8 và 10, nên trong manifest phải bật `"rollForward": true` thì mới chạy được.
+
+Báo cáo cho thấy **8 class, 27 ca: 25 passed, 0 failed**. 2 ca còn lại là 2 ca `[Explicit]` cố ý rớt của Bài 3, không chạy khi chạy cả bộ. Bản HTML được chép vào `docs/lab6_ketqua.html` vì thư mục `TestResults/` bị `.gitignore` bỏ qua.
+
+![](screenshots/lab6_C3_bao_cao_html.png)
+
+## Phần D — Chạy song song & thread-safety
+
+Cả hai lần đo đều chạy **Run All Tests** trong Test Explorer, cùng bật `"Headless": true`, cùng 25 ca.
+
+```csharp
+[assembly: Parallelizable(ParallelScope.Fixtures)]
+[assembly: LevelOfParallelism(4)]
+```
+
+Máy có 12 luồng CPU, nhưng mỗi luồng test mở một Chrome nên nhóm để 4 cho máy khỏi nghẹt.
+
+| | Tuần tự | Song song (sau khi sửa log) |
+|---|---|---|
+| Lần 1 | 1,7 phút, 25/25 Passed | 1,3 phút, 25/25 Passed |
+| Lần 2 | | 1,4 phút, 25/25 Passed |
+| Lần 3 | | 1,3 phút, 25/25 Passed |
+| Tổng thời lượng các ca (Group Summary) | 1,8 phút | 3,8 phút |
+
+Khi song song, tổng thời lượng các ca cộng lại (3,8 phút) lớn hơn nhiều so với thời gian chờ thật (1,3 phút), vì các fixture chạy chồng lên nhau. Từng ca cũng chậm hơn một chút do 4 Chrome tranh CPU. Lần chạy song song không nhanh gấp 4 vì `LoginTests` có 13 ca chạy lần lượt trong một fixture, mất khoảng 50 giây; đó là phần dài nhất, không chia nhỏ được nếu chỉ song song theo fixture.
+
+| Tuần tự: 1,7 phút | Song song: 1,3 phút |
+|---|---|
+| ![](screenshots/lab6_D1_tuan_tu_1p7.png) | ![](screenshots/lab6_D5_song_song_sau_sua_lan1.png) |
+
+**Có một lần rớt ngẫu nhiên và đã sửa.** Lần chạy song song thứ 3 (trước khi sửa) có 1 ca rớt: `DangNhap_04` báo `System.IO.IOException: The process cannot access the file ...nhatky_20261120.log because it is being used by another process`. Nguyên nhân là nhóm đang mở file nhật ký trong editor của Visual Studio, VS đọc lại file đúng lúc test ghi log trong `[SetUp]`. Đây không phải hai luồng test tranh nhau: trong tiến trình test, việc ghi file đã có `lock`. Chạy song song chỉ làm số lần ghi dày hơn nên dễ trúng lúc VS đang đọc. Lỗi này kéo theo lỗi thứ hai: `[TearDown]` cố chụp ảnh bằng `driver` của ca trước đã Dispose (`Cannot access a disposed object`).
+
+Cách sửa (commit `fix: ghi log không làm test rớt...`):
+- `Log.GhiFile` thử ghi lại tối đa 5 lần, vẫn không được thì bỏ dòng đó trong file. Ghi log hỏng không được phép làm test rớt.
+- `BaseTest` gán `driver = null` sau khi đóng trình duyệt.
+
+Sau khi sửa, nhóm vẫn để file log mở trong VS và chạy song song 3 lần liên tiếp, cả 3 lần đều 25/25 Passed.
+
+| Lần rớt ngẫu nhiên (trước khi sửa) | Chi tiết lỗi |
+|---|---|
+| ![](screenshots/lab6_D3_song_song_rot_ngau_nhien.png) | ![](screenshots/lab6_D4_chi_tiet_ca_rot_ioexception.png) |
+
+### Vì sao framework này thread-safe?
+
+`driver`, `cfg` và đồng hồ đo thời gian trong `BaseTest` đều là **field thường của từng đối tượng test**, không phải `static`. Với `ParallelScope.Fixtures`, mỗi class test chạy trên một luồng riêng và có Chrome riêng, các ca trong cùng class vẫn chạy lần lượt nên không ca nào dùng chung trình duyệt với ca khác. Những thứ `static` còn lại thì hoặc chỉ đọc (`ConfigReader` dùng `Lazy<T>`, mặc định an toàn khi nhiều luồng gọi cùng lúc; `users.json` chỉ đọc), hoặc được khóa (`Log` ghi file trong `lock`). Ảnh chụp lỗi lấy tên theo từng ca nên không ghi đè lên nhau.
+
+Nhóm không nâng lên `ParallelScope.Children`: NUnit chỉ tạo **một** đối tượng cho mỗi fixture, nếu các ca trong `LoginTests` chạy song song thì chúng sẽ dùng chung một field `driver`. Muốn làm vậy phải thêm `[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]`.
+
+## Phần E — AI sinh & thẩm định
+
+Ô được chọn: **Zip/Postal Code** ở trang Checkout: Your Information của saucedemo (đăng nhập rồi vào `checkout-step-one.html`). Nhóm viết `Pages/CheckoutPage.cs` trước để AI có sẵn hàm mà gọi.
+
+### Prompt đã dùng
+
+> Mình đang viết test Selenium C# (NUnit 4, .NET 10) cho ô **Zip/Postal Code** ở trang Checkout: Your Information của https://www.saucedemo.com (sau khi đăng nhập standard_user / secret_sauce, trang checkout-step-one.html có 3 ô First Name, Last Name, Zip/Postal Code và nút Continue).
+>
+> Framework đã có sẵn:
+> - Lớp `BaseTest` lo mở trình duyệt, đăng nhập thì gọi `new LoginPage(driver).DangNhap("standard_user", "secret_sauce")`.
+> - Page Object `CheckoutPage` với các hàm: `Mo()`, `DienThongTin(ho, ten, maBuuChinh)`, `BamTiepTuc()`, `DaSangBuocHai()` (bool), `CoThongBaoLoi()` (bool), `LayThongBaoLoi()` (string), `DongThongBaoLoi()`, `LayMaBuuChinhDangNhap()` (string).
+>
+> Hãy liệt kê các ca kiểm thử cho ô Zip/Postal Code, có cả ca biên, và viết luôn code NUnit (class kế thừa BaseTest, mỗi ca có câu Assert rõ ràng). Trả về toàn bộ code của file test.
+
+### Kết quả AI trả về (Claude)
+
+<details>
+<summary>AiPostalCodeTests.cs — 11 ca (bấm để mở)</summary>
+
+```csharp
+using FirstTests.Core;
+using FirstTests.Pages;
+
+namespace FirstTests.Tests;
+
+/// <summary>
+/// Kiểm thử ô Zip/Postal Code trên trang Checkout: Your Information của saucedemo.
+/// </summary>
+[TestFixture]
+public class AiPostalCodeTests : BaseTest
+{
+    private CheckoutPage trangCheckout = null!;
+
+    [SetUp]
+    public void DangNhapVaMoCheckout()
+    {
+        new LoginPage(driver).DangNhap("standard_user", "secret_sauce");
+        trangCheckout = new CheckoutPage(driver).Mo();
+    }
+
+    // AI 01 - Mã bưu chính hợp lệ gồm 5 chữ số
+    [Test]
+    public void AI01_MaHopLe5ChuSo_SangBuocHai()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "70000").BamTiepTuc();
+        Assert.That(trangCheckout.DaSangBuocHai(), Is.True);
+    }
+
+    // AI 02 - Bỏ trống mã bưu chính
+    [Test]
+    public void AI02_BoTrong_BaoLoiBatBuoc()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "").BamTiepTuc();
+        Assert.That(trangCheckout.LayThongBaoLoi(), Is.EqualTo("Error: Postal Code is required"));
+    }
+
+    // AI 03 - Chỉ nhập khoảng trắng, hệ thống phải coi như bỏ trống
+    [Test]
+    public void AI03_ChiKhoangTrang_BaoLoiBatBuoc()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "     ").BamTiepTuc();
+        Assert.That(trangCheckout.LayThongBaoLoi(), Is.EqualTo("Error: Postal Code is required"));
+    }
+
+    // AI 04 - Mã chứa chữ cái
+    [Test]
+    public void AI04_ChuaChuCai_BaoLoiPhaiLaSo()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "ABCDE").BamTiepTuc();
+        Assert.Multiple(() =>
+        {
+            Assert.That(trangCheckout.DaSangBuocHai(), Is.False);
+            Assert.That(trangCheckout.LayThongBaoLoi(), Does.Contain("Postal Code must be numeric"));
+        });
+    }
+
+    // AI 05 - Biên dưới: ít hơn 5 chữ số
+    [Test]
+    public void AI05_Chi4ChuSo_BaoLoiDoDai()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "1234").BamTiepTuc();
+        Assert.That(trangCheckout.CoThongBaoLoi(), Is.True, "Mã bưu chính phải đủ 5 chữ số");
+    }
+
+    // AI 06 - Biên trên: quá dài
+    [Test]
+    public void AI06_QuaDai_BaoLoiDoDai()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "1234567890").BamTiepTuc();
+        Assert.That(trangCheckout.DaSangBuocHai(), Is.False, "Mã bưu chính không được dài quá 5 ký tự");
+    }
+
+    // AI 07 - Ký tự đặc biệt
+    [Test]
+    public void AI07_KyTuDacBiet_BaoLoi()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "70@00").BamTiepTuc();
+        Assert.That(trangCheckout.CoThongBaoLoi(), Is.True);
+    }
+
+    // AI 08 - Định dạng ZIP+4 của Mỹ vẫn hợp lệ
+    [Test]
+    public void AI08_DinhDangZipCong4_SangBuocHai()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "12345-6789").BamTiepTuc();
+        Assert.That(trangCheckout.DaSangBuocHai(), Is.True);
+    }
+
+    // AI 09 - Có mã bưu chính nhưng thiếu First Name: lỗi phải báo First Name trước
+    [Test]
+    public void AI09_ThieuFirstName_BaoLoiFirstName()
+    {
+        trangCheckout.DienThongTin("", "An", "70000").BamTiepTuc();
+        Assert.That(trangCheckout.LayThongBaoLoi(), Is.EqualTo("Error: First Name is required"));
+    }
+
+    // AI 10 - Đóng thông báo lỗi bằng nút X
+    [Test]
+    public void AI10_DongThongBaoLoi_ThongBaoBienMat()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "").BamTiepTuc();
+        trangCheckout.DongThongBaoLoi();
+        Assert.That(trangCheckout.CoThongBaoLoi(), Is.False);
+    }
+
+    // AI 11 - Mã đã nhập được giữ lại khi rời trang rồi quay lại
+    [Test]
+    public void AI11_RoiTrangQuayLai_GiuNguyenMa()
+    {
+        trangCheckout.DienThongTin("Nguyen", "An", "70000");
+        trangCheckout.Mo();
+        Assert.That(trangCheckout.LayMaBuuChinhDangNhap(), Is.EqualTo("70000"));
+    }
+}
+```
+
+</details>
+
+### Chạy thử trên Visual Studio
+
+Nhóm dán nguyên file AI vào `Tests/`, Rebuild, lọc `Class:"AiPostalCodeTests"` trong Test Explorer rồi Run: **5 Passed, 6 Failed**. Chạy xong nhóm xóa file này, không commit.
+
+![](screenshots/lab6_E1_chay_thu_11_ca_ai.png)
+
+### Các ca KHÔNG dùng được
+
+| Ca | AI kỳ vọng | Thực tế trên saucedemo | Vì sao loại |
+|---|---|---|---|
+| AI03 chỉ khoảng trắng | báo "Postal Code is required" | 5 dấu cách vẫn được nhận, sang bước 2 | **Kỳ vọng sai**: trang chỉ kiểm ô có trống hay không, không cắt khoảng trắng. Test rớt vì chờ thông báo lỗi 10 giây không thấy |
+| AI04 chữ cái `ABCDE` | báo "Postal Code must be numeric" | sang bước 2 | **Quy tắc không có**: saucedemo không kiểm định dạng, câu thông báo đó AI tự nghĩ ra |
+| AI05 `1234` (4 số) | có thông báo lỗi độ dài | sang bước 2 | **Quy tắc không có**: không có luật "đủ 5 chữ số" |
+| AI06 `1234567890` | không được sang bước 2 | sang bước 2 | **Quy tắc không có**: ô không giới hạn độ dài |
+| AI07 `70@00` | có thông báo lỗi | sang bước 2 | **Quy tắc không có**: ký tự đặc biệt vẫn được nhận |
+| AI11 rời trang rồi quay lại | ô vẫn giữ `70000` | ô trống | **Kỳ vọng sai**: form không lưu dữ liệu khi tải lại trang |
+
+Ngoài ra code AI còn **tự viết `[SetUp]` trong file test** (`DangNhapVaMoCheckout`). Điều này trái quy ước của Bài 5: file test không có `[SetUp]`, vòng đời nằm ở `BaseTest`. Bản giữ lại dùng hàm `private MoTrangCheckout()` thay cho `[SetUp]`.
+
+### Các ca giữ lại
+
+5 ca đúng với hành vi thật được viết lại vào `Tests/CheckoutTests.cs` (`[Category("Checkout")]`): mã hợp lệ 5 số, bỏ trống báo `Error: Postal Code is required`, định dạng ZIP+4 `12345-6789`, có mã nhưng thiếu First Name thì báo lỗi First Name, và bấm X đóng thông báo lỗi. Ca bỏ trống được thêm `DaSangBuocHai() == false`, ca đóng thông báo được thêm bước kiểm có thông báo trước khi đóng. Cả 5 ca đều Passed ở cả chế độ tuần tự lẫn song song.
+
+### Nhận xét
+
+AI viết code đúng cú pháp, dùng đúng các hàm của Page nên dán vào là build được. Cái sai nằm ở chỗ AI áp những luật "thường gặp" cho ô mã bưu chính: phải là số, đúng 5 ký tự, không có ký tự đặc biệt, tự cắt khoảng trắng, lưu lại khi quay về. Saucedemo không có luật nào như vậy, nó chỉ bắt buộc ô không được trống. 6/11 ca rớt cho thấy không thể dùng thẳng kết quả của AI, phải chạy thử trên trang thật rồi mới giữ lại ca đúng.
+
+---
+
 # Lab 5 — Xây dựng framework: cấu trúc, cấu hình & Data-Driven Testing
 
 Nâng cấp bộ test của Bài 1–4 thành một framework nhỏ: cấu hình nằm trong file JSON, trình duyệt tạo qua `DriverFactory`, vòng đời trình duyệt gom vào `BaseTest`, còn dữ liệu đăng nhập đọc từ `Data/users.json`. Toàn bộ test chạy bằng **Test Explorer** của Visual Studio 2026, ảnh chụp nằm trong thư mục `screenshots/` (tên bắt đầu bằng `lab5_`).
