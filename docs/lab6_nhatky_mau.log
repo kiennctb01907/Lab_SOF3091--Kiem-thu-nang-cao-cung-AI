@@ -1,29 +1,6 @@
-===== Lần chạy lúc 19:16:47 =====
-2026-11-20 19:16:47.606 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI01_MaHopLe5ChuSo_SangBuocHai | trình duyệt Chrome (headless)
-2026-11-20 19:16:49.597 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI01_MaHopLe5ChuSo_SangBuocHai (2.0s)
-2026-11-20 19:16:49.756 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI02_BoTrong_BaoLoiBatBuoc | trình duyệt Chrome (headless)
-2026-11-20 19:16:51.838 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI02_BoTrong_BaoLoiBatBuoc (2.1s)
-2026-11-20 19:16:51.963 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI03_ChiKhoangTrang_BaoLoiBatBuoc | trình duyệt Chrome (headless)
-2026-11-20 19:17:04.306 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI03_ChiKhoangTrang_BaoLoiBatBuoc (12.3s) | OpenQA.Selenium.WebDriverTimeoutException : Timed out after 10 seconds
-2026-11-20 19:17:04.363 [INFO ] [luồng 14] Đã chụp ảnh khi test rớt: C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\FailureScreenshots\AI03_ChiKhoangTrang_BaoLoiBatBuoc.png
-2026-11-20 19:17:04.471 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI04_ChuaChuCai_BaoLoiPhaiLaSo | trình duyệt Chrome (headless)
-2026-11-20 19:17:16.896 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI04_ChuaChuCai_BaoLoiPhaiLaSo (12.4s) | Assert.That(trangCheckout.DaSangBuocHai(), Is.False)
-2026-11-20 19:17:16.956 [INFO ] [luồng 14] Đã chụp ảnh khi test rớt: C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\FailureScreenshots\AI04_ChuaChuCai_BaoLoiPhaiLaSo.png
-2026-11-20 19:17:17.063 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI05_Chi4ChuSo_BaoLoiDoDai | trình duyệt Chrome (headless)
-2026-11-20 19:17:22.100 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI05_Chi4ChuSo_BaoLoiDoDai (5.0s) | Mã bưu chính phải đủ 5 chữ số
-2026-11-20 19:17:22.159 [INFO ] [luồng 14] Đã chụp ảnh khi test rớt: C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\FailureScreenshots\AI05_Chi4ChuSo_BaoLoiDoDai.png
-2026-11-20 19:17:22.266 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI06_QuaDai_BaoLoiDoDai | trình duyệt Chrome (headless)
-2026-11-20 19:17:24.263 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI06_QuaDai_BaoLoiDoDai (2.0s) | Mã bưu chính không được dài quá 5 ký tự
-2026-11-20 19:17:24.344 [INFO ] [luồng 14] Đã chụp ảnh khi test rớt: C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\FailureScreenshots\AI06_QuaDai_BaoLoiDoDai.png
-2026-11-20 19:17:24.471 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI07_KyTuDacBiet_BaoLoi | trình duyệt Chrome (headless)
-2026-11-20 19:17:29.506 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI07_KyTuDacBiet_BaoLoi (5.0s) | Assert.That(trangCheckout.CoThongBaoLoi(), Is.True)
-2026-11-20 19:17:29.564 [INFO ] [luồng 14] Đã chụp ảnh khi test rớt: C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\FailureScreenshots\AI07_KyTuDacBiet_BaoLoi.png
-2026-11-20 19:17:29.674 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI08_DinhDangZipCong4_SangBuocHai | trình duyệt Chrome (headless)
-2026-11-20 19:17:31.849 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI08_DinhDangZipCong4_SangBuocHai (2.2s)
-2026-11-20 19:17:31.982 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI09_ThieuFirstName_BaoLoiFirstName | trình duyệt Chrome (headless)
-2026-11-20 19:17:35.073 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI09_ThieuFirstName_BaoLoiFirstName (3.1s)
-2026-11-20 19:17:35.175 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI10_DongThongBaoLoi_ThongBaoBienMat | trình duyệt Chrome (headless)
-2026-11-20 19:17:40.753 [INFO ] [luồng 14] OK       AiPostalCodeTests.AI10_DongThongBaoLoi_ThongBaoBienMat (5.6s)
-2026-11-20 19:17:40.857 [INFO ] [luồng 14] BẮT ĐẦU  AiPostalCodeTests.AI11_RoiTrangQuayLai_GiuNguyenMa | trình duyệt Chrome (headless)
-2026-11-20 19:17:43.006 [ERROR] [luồng 14] RỚT     AiPostalCodeTests.AI11_RoiTrangQuayLai_GiuNguyenMa (2.1s) | Assert.That(trangCheckout.LayMaBuuChinhDangNhap(), Is.EqualTo("70000"))
-2026-11-20 19:17:43.118 [INFO ] [luồng 14] Đã chụp ảnh khi test rớt: C:\Users\Kien\Pictures\lab1_kiemthuAI\FirstTests\bin\Debug\net10.0\FailureScreenshots\AI11_RoiTrangQuayLai_GiuNguyenMa.png
+===== Lần chạy lúc 19:56:15 =====
+2026-11-20 19:56:15.240 [INFO ] [luồng 18] BẮT ĐẦU  NhatKyMauTests.DangNhapDung_VaoTrangSanPham_Dau | trình duyệt Chrome (headless)
+2026-11-20 19:56:16.742 [INFO ] [luồng 18] OK       NhatKyMauTests.DangNhapDung_VaoTrangSanPham_Dau (1.6s)
+2026-11-20 19:56:16.893 [INFO ] [luồng 18] BẮT ĐẦU  NhatKyMauTests.TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot | trình duyệt Chrome (headless)
+2026-11-20 19:56:21.684 [ERROR] [luồng 18] RỚT     NhatKyMauTests.TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot (4.8s) | Cố ý sai để có dòng [ERROR] trong nhật ký
+2026-11-20 19:56:21.756 [INFO ] [luồng 18] Đã chụp ảnh khi test rớt: FirstTests\bin\Debug\net10.0\FailureScreenshots\TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot.png
