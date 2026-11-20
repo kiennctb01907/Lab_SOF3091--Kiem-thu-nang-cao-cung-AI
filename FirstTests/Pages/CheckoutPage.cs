@@ -35,6 +35,15 @@ public class CheckoutPage : BasePage
         return this;
     }
 
+    /// <summary>Người dùng xóa ô Zip/Postal Code rồi gõ mã mới (hai ô tên giữ nguyên).</summary>
+    public CheckoutPage NhapLaiMaBuuChinh(string maBuuChinh)
+    {
+        IWebElement o = Tim(oMaBuuChinh);
+        o.Clear();
+        o.SendKeys(maBuuChinh);
+        return this;
+    }
+
     /// <summary>Người dùng bấm Continue.</summary>
     public CheckoutPage BamTiepTuc()
     {
