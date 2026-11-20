@@ -39,7 +39,7 @@ public abstract class BaseTest
             if (ketQua.Outcome.Status == TestStatus.Failed)
             {
                 Log.Error($"RỚT     {TenCa()} ({thoiGian}) | {DongDau(ketQua.Message)}");
-                if (driver != null)
+                if (driver is not null)
                 {
                     string duongDan = ScreenshotHelper.Chup(driver, TestContext.CurrentContext.Test.Name);
                     TestContext.AddTestAttachment(duongDan, "Ảnh chụp màn hình lúc test thất bại");
@@ -61,6 +61,8 @@ public abstract class BaseTest
             // Đặt trong finally để chụp ảnh lỗi cũng không để lại trình duyệt chạy ngầm
             driver?.Quit();
             driver?.Dispose();
+            // Gán lại null: nếu SetUp của ca sau hỏng trước khi tạo driver mới thì TearDown không đụng vào driver cũ đã đóng
+            driver = null!;
         }
     }
 

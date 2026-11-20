@@ -30,10 +30,34 @@ public static class Log
         {
             if (!daGhiDauLanChay)
             {
-                File.AppendAllText(duongDanFile, $"===== Lần chạy lúc {DateTime.Now:HH:mm:ss} =====" + Environment.NewLine);
+                GhiFile($"===== Lần chạy lúc {DateTime.Now:HH:mm:ss} =====");
                 daGhiDauLanChay = true;
             }
-            File.AppendAllText(duongDanFile, dong + Environment.NewLine);
+            GhiFile(dong);
+        }
+    }
+
+    /// <summary>
+    /// Ghi 1 dòng vào file. Chương trình khác (vd Visual Studio đang mở file log) có thể giữ file trong chốc lát,
+    /// nên thử lại vài lần; vẫn không được thì bỏ qua dòng đó trong file. Ghi log hỏng không được làm test rớt.
+    /// </summary>
+    private static void GhiFile(string dong)
+    {
+        for (int lan = 1; lan <= 5; lan++)
+        {
+            try
+            {
+                File.AppendAllText(duongDanFile, dong + Environment.NewLine);
+                return;
+            }
+            catch (IOException) when (lan < 5)
+            {
+                Thread.Sleep(50);
+            }
+            catch (IOException ex)
+            {
+                TestContext.Progress.WriteLine($"[Log] Không ghi được file nhật ký: {ex.Message}");
+            }
         }
     }
 
