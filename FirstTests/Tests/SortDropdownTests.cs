@@ -10,7 +10,7 @@ namespace FirstTests.Tests;
 [TestFixture]
 public class SortDropdownTests : BaseTest
 {
-    [Test]
+    [Test, Category("Smoke")]
     public void SortPriceLowToHigh_PricesShouldBeAscending()
     {
         var trangDangNhap = new LoginPage(driver);

@@ -10,6 +10,7 @@ namespace FirstTests.Tests;
 /// Lab 5 - Phần D: DangNhap_TheoDuLieu sinh ra 1 ca test cho mỗi bộ trong Data/users.json.
 /// </summary>
 [TestFixture]
+[Category("Login")]
 public class LoginTests : BaseTest
 {
     // ---------------- Lab 5 - Phần D: Data-Driven ----------------
@@ -73,7 +74,7 @@ public class LoginTests : BaseTest
 
     // ---------------- Lab 2 - Phần B (giữ lại) ----------------
 
-    [Test]
+    [Test, Category("Smoke")]
     public void Login_StandardUser_ShouldGoToInventoryPage()
     {
         InventoryPage trangSanPham = new LoginPage(driver).DangNhap("standard_user", "secret_sauce");
@@ -105,7 +106,7 @@ public class LoginTests : BaseTest
 
     // ---------------- Lab 2 - Phần C (giữ lại) ----------------
 
-    [Test]
+    [Test, Category("Smoke")]
     public void Inventory_ShouldListSixProductsWithValidNameAndPrice()
     {
         InventoryPage trangSanPham = new LoginPage(driver).DangNhap("standard_user", "secret_sauce");

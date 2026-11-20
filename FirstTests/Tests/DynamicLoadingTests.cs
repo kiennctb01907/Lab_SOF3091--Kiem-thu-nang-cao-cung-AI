@@ -8,6 +8,7 @@ namespace FirstTests.Tests;
 /// Phần tử "Hello World!" chỉ được JavaScript tạo ra vài giây SAU khi bấm Start.
 /// </summary>
 [TestFixture]
+[Category("TheInternet"), Category("Slow")]
 public class DynamicLoadingTests : BaseTest
 {
     /// <summary>
