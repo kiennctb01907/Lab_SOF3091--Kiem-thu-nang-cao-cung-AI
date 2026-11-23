@@ -51,6 +51,13 @@ public class CheckoutPage : BasePage
         return this;
     }
 
+    /// <summary>Lab 7: điền đủ thông tin hợp lệ rồi bấm Continue, sang trang Overview.</summary>
+    public CheckoutOverviewPage DienVaTiepTuc(string ho, string ten, string maBuuChinh)
+    {
+        DienThongTin(ho, ten, maBuuChinh).BamTiepTuc();
+        return new CheckoutOverviewPage(driver);
+    }
+
     /// <summary>Người dùng có sang được bước 2 (Checkout: Overview) hay không. Trả false thay vì ném lỗi.</summary>
     public bool DaSangBuocHai()
     {
