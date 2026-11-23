@@ -1,0 +1,6 @@
+===== Lần chạy lúc 19:56:15 =====
+2026-11-20 19:56:15.240 [INFO ] [luồng 18] BẮT ĐẦU  NhatKyMauTests.DangNhapDung_VaoTrangSanPham_Dau | trình duyệt Chrome (headless)
+2026-11-20 19:56:16.742 [INFO ] [luồng 18] OK       NhatKyMauTests.DangNhapDung_VaoTrangSanPham_Dau (1.6s)
+2026-11-20 19:56:16.893 [INFO ] [luồng 18] BẮT ĐẦU  NhatKyMauTests.TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot | trình duyệt Chrome (headless)
+2026-11-20 19:56:21.684 [ERROR] [luồng 18] RỚT     NhatKyMauTests.TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot (4.8s) | Cố ý sai để có dòng [ERROR] trong nhật ký
+2026-11-20 19:56:21.756 [INFO ] [luồng 18] Đã chụp ảnh khi test rớt: FirstTests\bin\Debug\net10.0\FailureScreenshots\TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot.png

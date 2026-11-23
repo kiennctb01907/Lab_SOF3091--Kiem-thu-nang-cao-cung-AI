@@ -40,3 +40,32 @@
 | `lab5_E1_chay_thu_du_lieu_ai.png` | Chạy thử 10 bộ AI sinh: 8 Passed, 2 Failed | E |
 | `lab5_E2_chi_tiet_ca_ai_sai.png` | Chi tiết ca AI 05 `STANDARD_USER` rớt | E |
 | `lab5_F_run_all_chrome.png` | Run All cuối cùng với Chrome: 20/20 Passed | — |
+
+## Lab 6
+
+| File | Nội dung | Phần |
+|---|---|---|
+| `lab6_A1_category_trong_code.png` | `[Category]` gắn trong LoginTests.cs | A |
+| `lab6_A2_test_explorer_trait_smoke.png` | Test Explorer lọc `Trait:"Smoke"`: 5 ca | A |
+| `lab6_A3_test_explorer_tru_slow.png` | Test Explorer lọc `-Trait:"Slow"`: 26 ca | A |
+| `lab6_A4_dotnet_test_category_smoke.png` | Terminal VS: `dotnet test --filter "Category=Smoke"` → 5 succeeded | A |
+| `lab6_A5_dotnet_test_category_khac_slow.png` | Terminal VS: `dotnet test --filter "Category!=Slow"` → 26 succeeded | A |
+| `lab6_B1_lop_log.png` | Utilities/Log.cs | B |
+| `lab6_B2_basetest_ghi_log.png` | BaseTest ghi BẮT ĐẦU / OK / RỚT | B |
+| `lab6_B3_find_khong_log_trong_tests.png` | Find in Files `Log.` trong Tests: 0 kết quả trên 9 file | B |
+| `lab6_B4_nhat_ky_co_ca_rot.png` | File nhật ký mở trong VS: [INFO] OK và [ERROR] RỚT | B |
+| `lab6_B5_test_explorer_nhat_ky_mau.png` | Test Explorer lọc `Trait:"NhatKyMau"`: 1 Passed, 1 Failed | B |
+| `lab6_B6_dotnet_test_nhat_ky_mau.png` | Terminal VS: nhật ký hiện trực tiếp, có dòng [ERROR] | B |
+| `lab6_C1_dotnet_test_trx.png` | `dotnet test --logger "trx;LogFileName=ketqua.trx"` | C |
+| `lab6_C2_trxlog2html.png` | Lệnh trxlog2html và file ketqua.html | C |
+| `lab6_C3_bao_cao_html.png` | Trang báo cáo HTML: 32 ca, 28 passed, 0 failed | C |
+| `lab6_D2_parallel_settings.png` | ParallelSettings.cs (LevelOfParallelism 6) | D |
+| `lab6_D3_song_song_rot_ngau_nhien.png` | Song song lần 3 trước khi sửa log: 1 ca rớt | D |
+| `lab6_D4_chi_tiet_ca_rot_ioexception.png` | Chi tiết: IOException khi ghi file log | D |
+| `lab6_D8_song_song_6_luong_lan1.png` | Run All song song lần 1: 28 Passed | D |
+| `lab6_D9_song_song_6_luong_lan2.png` | Run All song song lần 2: 28 Passed | D |
+| `lab6_D10_song_song_6_luong_lan3.png` | Run All song song lần 3: 28 Passed | D |
+| `lab6_D11_dotnet_test_tuan_tu.png` | Tuần tự (`NUnit.NumberOfTestWorkers=0`): 28 succeeded, 108,6 giây | D |
+| `lab6_D12_dotnet_test_song_song.png` | Song song: 28 succeeded, 75,2 giây | D |
+| `lab6_E1_chay_thu_ai.png` | Chạy thử 10 ca AI: 10 Passed | E |
+| `lab6_E2_checkout_tests_da_loc.png` | CheckoutTests.cs: 8 ca đã lọc, không có [SetUp] | E |

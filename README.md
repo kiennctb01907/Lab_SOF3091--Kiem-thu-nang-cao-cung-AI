@@ -1,3 +1,390 @@
+# Lab 6 — Test Runner, báo cáo, logging & chạy song song
+
+Làm tiếp trên framework của Bài 5. Test chạy bằng **Test Explorer** của Visual Studio 2026. Các lệnh `dotnet test` đề bài yêu cầu được gõ trong cửa sổ **Terminal của Visual Studio** (View > Terminal). Ảnh chụp nằm trong `screenshots/`, tên bắt đầu bằng `lab6_`.
+
+Những gì thêm mới:
+
+```
+FirstTests/
+├── Core/
+│   ├── BaseTest.cs           + ghi log BẮT ĐẦU ở [SetUp], OK/RỚT ở [TearDown]
+│   └── ParallelSettings.cs   [assembly: Parallelizable(Fixtures)] + LevelOfParallelism(6)
+├── Pages/CheckoutPage.cs     trang Checkout: Your Information (dùng cho Phần E)
+├── Tests/CheckoutTests.cs    8 ca ô Postal Code đã lọc từ đề xuất của AI
+├── Tests/NhatKyMauTests.cs   [Explicit] 1 ca đậu + 1 ca cố ý rớt để xem nhật ký (Phần B)
+└── Utilities/Log.cs          Info / Warn / Error, có thời gian + mức độ + mã luồng
+dotnet-tools.json             công cụ trxlog2html (cài cục bộ cho repo)
+docs/lab6_nhatky_mau.log      đoạn nhật ký thật (Phần B)
+docs/lab6_ketqua.html         báo cáo HTML sinh từ ketqua.trx (Phần C)
+```
+
+## Phần A — Tổ chức test với `[Category]`
+
+| Category | Gắn ở đâu | Số ca |
+|---|---|---|
+| `Smoke` | đăng nhập đúng, danh sách 6 sản phẩm, sắp xếp giá, mở trang chủ Selenium, Postal Code hợp lệ | 5 |
+| `Login` | cả class `LoginTests` (gồm 9 ca data-driven) | 13 |
+| `Checkout` | cả class `CheckoutTests` | 8 |
+| `TheInternet` | `AlertIframeTests`, `DynamicLoadingTests` | 6 |
+| `Slow` | `DynamicLoadingTests` (chờ ~10 giây) và ca iframe | 2 chạy thường |
+| `NhatKyMau` | `NhatKyMauTests` (Explicit, chỉ chạy khi gọi đúng tên nhóm) | 2 |
+
+Chạy chọn lọc bằng 2 cách, kết quả giống nhau:
+
+| Điều kiện | Test Explorer (ô Search) | Terminal của VS | Kết quả |
+|---|---|---|---|
+| Chỉ Smoke | `Trait:"Smoke"` | `dotnet test FirstTests --filter "Category=Smoke"` | 5 ca, 5 Passed |
+| Bỏ Slow | `-Trait:"Slow"` | `dotnet test FirstTests --filter "Category!=Slow"` | 26 ca, 26 Passed |
+
+| `--filter "Category=Smoke"` | `--filter "Category!=Slow"` |
+|---|---|
+| ![](screenshots/lab6_A4_dotnet_test_category_smoke.png) | ![](screenshots/lab6_A5_dotnet_test_category_khac_slow.png) |
+
+## Phần B — Logging vào BaseTest
+
+`Utilities/Log.cs` có `Info`, `Warn`, `Error`. Mỗi dòng có thời gian tới mili giây, mức độ và mã luồng (để nhìn ra ca nào chạy trên luồng nào khi bật song song). Dòng log được in qua `TestContext.Progress.WriteLine`, nên thấy ngay trên terminal mà không cần cờ `verbosity=detailed`. Đồng thời log được ghi vào file `bin/Debug/net10.0/Logs/nhatky_yyyyMMdd.log`, mỗi lần chạy mở đầu bằng một dòng `=====`.
+
+`BaseTest` ghi `BẮT ĐẦU` ở `[SetUp]` và `OK` hoặc `RỚT` (mức `ERROR`, kèm dòng đầu của thông báo lỗi) ở `[TearDown]`. File test không gọi `Log` lần nào: tìm `Log\.(Info|Warn|Error)` trong `FirstTests\Tests` bằng Find in Files ra 0 kết quả trên 9 file.
+
+Để có một lần chạy gồm cả ca đậu và ca rớt, nhóm thêm `Tests/NhatKyMauTests.cs`, gắn `[Explicit]` ở mức class. Class này có 1 ca đăng nhập đúng và 1 ca cố ý kỳ vọng sai (tài khoản bị khóa mà kỳ vọng vào được). Gắn `[Explicit]` để Run All và các lần đo song song không bị ca này làm đỏ. Muốn chạy thì lọc `Trait:"NhatKyMau"` trong Test Explorer, hoặc chạy `dotnet test --filter "Category=NhatKyMau"`. File này cũng không gọi `Log`, mọi dòng nhật ký đều do `BaseTest` ghi. Nhật ký thật của lần chạy từ Test Explorer (`docs/lab6_nhatky_mau.log`):
+
+```
+===== Lần chạy lúc 19:56:15 =====
+2026-11-20 19:56:15.240 [INFO ] [luồng 18] BẮT ĐẦU  NhatKyMauTests.DangNhapDung_VaoTrangSanPham_Dau | trình duyệt Chrome (headless)
+2026-11-20 19:56:16.742 [INFO ] [luồng 18] OK       NhatKyMauTests.DangNhapDung_VaoTrangSanPham_Dau (1.6s)
+2026-11-20 19:56:16.893 [INFO ] [luồng 18] BẮT ĐẦU  NhatKyMauTests.TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot | trình duyệt Chrome (headless)
+2026-11-20 19:56:21.684 [ERROR] [luồng 18] RỚT     NhatKyMauTests.TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot (4.8s) | Cố ý sai để có dòng [ERROR] trong nhật ký
+2026-11-20 19:56:21.756 [INFO ] [luồng 18] Đã chụp ảnh khi test rớt: FirstTests\bin\Debug\net10.0\FailureScreenshots\TaiKhoanBiKhoa_CoYKyVongVaoDuoc_Rot.png
+```
+
+| Test Explorer: 1 Passed, 1 Failed | Cùng lần chạy trong Terminal của VS |
+|---|---|
+| ![](screenshots/lab6_B5_test_explorer_nhat_ky_mau.png) | ![](screenshots/lab6_B6_dotnet_test_nhat_ky_mau.png) |
+
+![](screenshots/lab6_B4_nhat_ky_co_ca_rot.png)
+
+## Phần C — Báo cáo HTML
+
+Chạy trong Terminal của VS:
+
+```
+dotnet test FirstTests --logger "trx;LogFileName=ketqua.trx"
+dotnet trxlog2html -i FirstTests\TestResults\ketqua.trx -o FirstTests\TestResults\ketqua.html
+```
+
+`trxlog2html` được cài dạng local tool (`dotnet tool install trxlog2html`, ghi vào `dotnet-tools.json`), người khác clone repo về chỉ cần `dotnet tool restore`. Công cụ này build cho .NET 9 mà máy chỉ có .NET 8 và 10, nên trong manifest phải bật `"rollForward": true` thì mới chạy được.
+
+Báo cáo cho thấy **9 class, 32 ca: 28 passed, 0 failed**. Còn 4 ca là các ca `[Explicit]` (2 ca cố ý rớt của Bài 3 và 2 ca `NhatKyMau`), không chạy khi chạy cả bộ. Trang HTML được mở trong Edge để chụp, vì Visual Studio không hiển thị được trang HTML. Bản HTML được chép vào `docs/lab6_ketqua.html` vì thư mục `TestResults/` bị `.gitignore` bỏ qua.
+
+![](screenshots/lab6_C3_bao_cao_html.png)
+
+## Phần D — Chạy song song & thread-safety
+
+```csharp
+[assembly: Parallelizable(ParallelScope.Fixtures)]
+[assembly: LevelOfParallelism(6)]   // bằng số nhân CPU: AMD Ryzen 5 220, 6 nhân / 12 luồng
+```
+
+Mọi lần đo đều bật `"Headless": true`.
+
+**Đo bằng `dotnet test` trong Terminal của VS, cùng một bản build.** Thêm `-- NUnit.NumberOfTestWorkers=0` để NUnit tắt chạy song song mà không phải sửa code:
+
+| | Lệnh | Kết quả | Thời gian |
+|---|---|---|---|
+| Tuần tự | `dotnet test FirstTests -- NUnit.NumberOfTestWorkers=0` | 28 succeeded, 0 failed | **108,6 giây** |
+| Song song | `dotnet test FirstTests` | 28 succeeded, 0 failed | **75,2 giây** |
+
+| Tuần tự | Song song |
+|---|---|
+| ![](screenshots/lab6_D11_dotnet_test_tuan_tu.png) | ![](screenshots/lab6_D12_dotnet_test_song_song.png) |
+
+Khi tuần tự, mọi dòng nhật ký đều cùng một mã luồng. Khi song song thì có nhiều mã luồng xen kẽ, tức là các class chạy cùng lúc.
+
+**Chạy song song 3 lần liên tiếp bằng Run All trong Test Explorer:** 1,4 phút, 1,3 phút, 1,5 phút, cả 3 lần đều 28/28 Passed. Kết quả không đổi so với tuần tự, không ca nào rớt thêm. Thời gian trong Test Explorer dao động giữa các lần chạy (1,3–1,5 phút; có lần đo trước đó chỉ 54 giây) vì 6 Chrome chạy cùng lúc nên tốc độ phụ thuộc nhiều vào máy có đang bận việc khác hay không. Vì vậy số liệu để so sánh tuần tự/song song nhóm lấy từ hai lệnh dotnet test chạy liền nhau ở trên. Song song không nhanh hơn được nữa vì `LoginTests` có 13 ca chạy lần lượt trong một fixture, mất khoảng 50 giây; đó là phần dài nhất, không chia nhỏ được nếu chỉ song song theo fixture.
+
+![](screenshots/lab6_D8_song_song_6_luong_lan1.png)
+
+### Quá trình: một lần rớt ngẫu nhiên và cách sửa
+
+Lúc đầu nhóm để `LevelOfParallelism(4)`, tuần tự 1,7 phút còn song song 1,2–1,4 phút. Lần chạy song song thứ 3 lúc đó có 1 ca rớt: `DangNhap_04` báo `System.IO.IOException: The process cannot access the file ...nhatky_20261120.log because it is being used by another process`. Nguyên nhân là nhóm đang mở file nhật ký trong editor của Visual Studio, VS đọc lại file đúng lúc test ghi log trong `[SetUp]`. Đây không phải hai luồng test tranh nhau: trong tiến trình test, việc ghi file đã nằm trong `lock`. Có điều chạy song song làm số lần ghi dày hơn nên dễ trúng lúc VS đang đọc. Lỗi này kéo theo lỗi thứ hai: `[TearDown]` cố chụp ảnh bằng `driver` của ca trước đã Dispose (`Cannot access a disposed object`).
+
+Cách sửa (commit `fix: ghi log không làm test rớt...`):
+- `Log.GhiFile` thử ghi lại tối đa 5 lần, vẫn không được thì bỏ dòng đó trong file. Ghi log hỏng không được phép làm test rớt.
+- `BaseTest` gán `driver = null` sau khi đóng trình duyệt.
+
+Sau khi sửa, nhóm vẫn để file log mở trong VS và chạy song song 3 lần, cả 3 lần đều xanh. Sau đó nhóm nâng lên `LevelOfParallelism(6)` theo gợi ý của đề (bằng số nhân CPU) và đo lại như ở trên.
+
+| Lần rớt ngẫu nhiên (trước khi sửa) | Chi tiết lỗi |
+|---|---|
+| ![](screenshots/lab6_D3_song_song_rot_ngau_nhien.png) | ![](screenshots/lab6_D4_chi_tiet_ca_rot_ioexception.png) |
+
+### Vì sao framework này thread-safe?
+
+`driver`, `cfg` và đồng hồ đo thời gian trong `BaseTest` đều là **field thường của từng đối tượng test**, không phải `static`. Với `ParallelScope.Fixtures`, mỗi class test chạy trên một luồng riêng và có Chrome riêng, các ca trong cùng class vẫn chạy lần lượt nên không ca nào dùng chung trình duyệt với ca khác. Những thứ `static` còn lại thì hoặc chỉ đọc (`ConfigReader` dùng `Lazy<T>`, mặc định an toàn khi nhiều luồng gọi cùng lúc; `users.json` chỉ đọc), hoặc được khóa (`Log` ghi file trong `lock`). Ảnh chụp lỗi lấy tên theo từng ca nên không ghi đè lên nhau.
+
+Nhóm không nâng lên `ParallelScope.Children`: NUnit chỉ tạo **một** đối tượng cho mỗi fixture, nếu các ca trong `LoginTests` chạy song song thì chúng sẽ dùng chung một field `driver`. Muốn làm vậy phải thêm `[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]`.
+
+## Phần E — AI sinh & thẩm định
+
+Ô được chọn: **Zip/Postal Code** ở trang Checkout: Your Information của saucedemo (đăng nhập rồi vào `checkout-step-one.html`). Nhóm viết `Pages/CheckoutPage.cs` trước để AI có sẵn hàm mà gọi.
+
+**AI được dùng:** một phiên Claude mới, không có ngữ cảnh của bài, không đọc được code của repo và không dùng công cụ nào (không lên mạng, không chạy thử); nó chỉ nhận đúng prompt bên dưới. Lúc đầu nhóm hỏi ngay trong phiên trợ lý đang giúp làm bài, nhưng phiên đó đã biết trước saucedemo hoạt động ra sao, nên kết quả không khách quan. Nhóm bỏ kết quả đó và hỏi lại bằng phiên mới.
+
+### Prompt đã dùng
+
+> Mình đang viết test Selenium C# (NUnit 4, .NET 10) cho ô **Zip/Postal Code** ở trang Checkout: Your Information của https://www.saucedemo.com (sau khi đăng nhập standard_user / secret_sauce, trang checkout-step-one.html có 3 ô First Name, Last Name, Zip/Postal Code và nút Continue).
+>
+> Framework đã có sẵn:
+> - Lớp `BaseTest` lo mở trình duyệt, đăng nhập thì gọi `new LoginPage(driver).DangNhap("standard_user", "secret_sauce")`.
+> - Page Object `CheckoutPage` với các hàm: `Mo()`, `DienThongTin(ho, ten, maBuuChinh)`, `BamTiepTuc()`, `DaSangBuocHai()` (bool), `CoThongBaoLoi()` (bool), `LayThongBaoLoi()` (string), `DongThongBaoLoi()`, `LayMaBuuChinhDangNhap()` (string).
+>
+> Hãy liệt kê các ca kiểm thử cho ô Zip/Postal Code, có cả ca biên, và viết luôn code NUnit (class kế thừa BaseTest, mỗi ca có câu Assert rõ ràng). Trả về toàn bộ code của file test.
+
+### Kết quả AI trả về (nguyên văn)
+
+**Các ca kiểm thử cho ô Zip/Postal Code**
+
+Trang này chỉ chặn trường hợp ô trống. Khi ô trống, nó báo "Error: Postal Code is required". Ngoài ra trang không giới hạn độ dài và không kiểm tra định dạng.
+
+| # | Ca kiểm thử | Dữ liệu Postal Code | Kết quả mong đợi |
+|---|---|---|---|
+| TC01 | Hợp lệ, 5 chữ số | `70000` | Sang bước 2 |
+| TC02 | Bỏ trống (ca biên: độ dài 0) | `""` | Báo lỗi "Error: Postal Code is required", vẫn ở bước 1 |
+| TC03 | Ca biên dưới: 1 ký tự | `1` | Sang bước 2 |
+| TC04 | Ca biên trên: chuỗi dài 100 ký tự | `"9" x 100` | Ô giữ đủ 100 ký tự, sang bước 2 |
+| TC05 | Có chữ và khoảng trắng (mã kiểu Anh) | `SW1A 1AA` | Sang bước 2 |
+| TC06 | Chỉ có khoảng trắng | `"   "` | Trang hiện tại vẫn cho sang bước 2 vì không cắt khoảng trắng. Đây là chỗ nên ghi nhận là lỗi tiềm ẩn |
+| TC07 | Ký tự đặc biệt hoặc chuỗi giống script | `<script>alert(1)</script>` | Ô giữ nguyên chuỗi, không bật hộp thoại alert, sang bước 2 |
+| TC08 | Có khoảng trắng ở đầu và cuối | `"  70000  "` | Sang bước 2 |
+| TC09 | Thứ tự báo lỗi: cả 3 ô đều trống | `""` | Báo lỗi First Name trước, chưa báo lỗi Postal Code |
+| TC10 | Đóng thông báo lỗi rồi nhập lại | `""` rồi `70000` | Đóng được thông báo lỗi, nhập lại mã hợp lệ thì sang bước 2 |
+
+Hai giả định trong code. Thứ nhất, `BaseTest` cho lớp con dùng biến `driver`. Thứ hai, `CheckoutPage` nhận `driver` qua hàm khởi tạo. Nếu một trong hai khác trong project của bạn thì sửa lại cho khớp. `[SetUp]` của lớp con chạy sau `[SetUp]` của `BaseTest`, nên lúc đăng nhập trình duyệt đã được mở sẵn.
+
+<details>
+<summary>AiPostalCodeTests.cs — 10 ca (bấm để mở)</summary>
+
+```csharp
+using FirstTests.Core;
+using FirstTests.Pages;
+using NUnit.Framework;
+using OpenQA.Selenium;
+
+namespace FirstTests.Tests
+{
+    [TestFixture]
+    [Category("PostalCode")]
+    public class AiPostalCodeTests : BaseTest
+    {
+        private const string Ho = "Nguyen";
+        private const string Ten = "An";
+        private const string LoiThieuMaBuuChinh = "Error: Postal Code is required";
+        private const string LoiThieuHo = "Error: First Name is required";
+
+        private CheckoutPage checkout = null!;
+
+        [SetUp]
+        public void MoTrangCheckout()
+        {
+            new LoginPage(driver).DangNhap("standard_user", "secret_sauce");
+            checkout = new CheckoutPage(driver);
+            checkout.Mo();
+        }
+
+        [Test]
+        [Description("TC01 - Mã bưu chính hợp lệ 5 chữ số thì sang bước 2")]
+        public void TC01_MaHopLe5ChuSo_SangBuocHai()
+        {
+            checkout.DienThongTin(Ho, Ten, "70000");
+            checkout.BamTiepTuc();
+
+            Assert.That(checkout.DaSangBuocHai(), Is.True,
+                "Nhập mã bưu chính hợp lệ nhưng không sang được bước 2.");
+        }
+
+        [Test]
+        [Description("TC02 - Bỏ trống mã bưu chính thì báo lỗi bắt buộc")]
+        public void TC02_BoTrong_BaoLoiBatBuoc()
+        {
+            checkout.DienThongTin(Ho, Ten, "");
+            checkout.BamTiepTuc();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(checkout.DaSangBuocHai(), Is.False,
+                    "Bỏ trống mã bưu chính mà vẫn sang bước 2.");
+                Assert.That(checkout.CoThongBaoLoi(), Is.True,
+                    "Không thấy thông báo lỗi.");
+                Assert.That(checkout.LayThongBaoLoi(), Is.EqualTo(LoiThieuMaBuuChinh),
+                    "Nội dung thông báo lỗi không đúng.");
+            });
+        }
+
+        [Test]
+        [Description("TC03 - Ca biên dưới: 1 ký tự")]
+        public void TC03_BienDuoi_MotKyTu_SangBuocHai()
+        {
+            checkout.DienThongTin(Ho, Ten, "1");
+            checkout.BamTiepTuc();
+
+            Assert.That(checkout.DaSangBuocHai(), Is.True,
+                "Mã bưu chính 1 ký tự bị từ chối.");
+        }
+
+        [Test]
+        [Description("TC04 - Ca biên trên: chuỗi rất dài 100 ký tự")]
+        public void TC04_BienTren_ChuoiDai_GiuNguyenVaSangBuocHai()
+        {
+            string maDai = new string('9', 100);
+
+            checkout.DienThongTin(Ho, Ten, maDai);
+
+            Assert.That(checkout.LayMaBuuChinhDangNhap(), Is.EqualTo(maDai),
+                "Ô Postal Code đã cắt bớt chuỗi dài.");
+
+            checkout.BamTiepTuc();
+
+            Assert.That(checkout.DaSangBuocHai(), Is.True,
+                "Mã bưu chính 100 ký tự không sang được bước 2.");
+        }
+
+        [Test]
+        [Description("TC05 - Mã có chữ và khoảng trắng (kiểu Anh)")]
+        public void TC05_MaCoChuVaKhoangTrang_SangBuocHai()
+        {
+            checkout.DienThongTin(Ho, Ten, "SW1A 1AA");
+            checkout.BamTiepTuc();
+
+            Assert.That(checkout.DaSangBuocHai(), Is.True,
+                "Mã bưu chính dạng chữ và số bị từ chối.");
+        }
+
+        [Test]
+        [Description("TC06 - Chỉ nhập khoảng trắng: trang hiện tại vẫn cho qua (lỗi tiềm ẩn)")]
+        public void TC06_ChiKhoangTrang_HanhViHienTai_VanSangBuocHai()
+        {
+            checkout.DienThongTin(Ho, Ten, "   ");
+            checkout.BamTiepTuc();
+
+            // Ghi nhận hành vi thực tế: trang không trim nên vẫn cho qua.
+            // Nếu yêu cầu nghiệp vụ là phải chặn thì đây là lỗi cần báo.
+            Assert.That(checkout.DaSangBuocHai(), Is.True,
+                "Hành vi đã thay đổi: chuỗi toàn khoảng trắng giờ bị chặn.");
+        }
+
+        [Test]
+        [Description("TC07 - Ký tự đặc biệt hoặc chuỗi script không bị thực thi")]
+        public void TC07_KyTuDacBiet_KhongThucThiScript()
+        {
+            const string chuoiScript = "<script>alert(1)</script>";
+
+            checkout.DienThongTin(Ho, Ten, chuoiScript);
+
+            Assert.That(checkout.LayMaBuuChinhDangNhap(), Is.EqualTo(chuoiScript),
+                "Ô Postal Code không giữ nguyên chuỗi ký tự đặc biệt.");
+
+            checkout.BamTiepTuc();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(CoHopThoaiAlert(), Is.False,
+                    "Chuỗi script đã bị thực thi và bật hộp thoại alert.");
+                Assert.That(checkout.DaSangBuocHai(), Is.True,
+                    "Chuỗi ký tự đặc biệt không sang được bước 2.");
+            });
+        }
+
+        [Test]
+        [Description("TC08 - Có khoảng trắng ở đầu và cuối")]
+        public void TC08_KhoangTrangDauCuoi_SangBuocHai()
+        {
+            checkout.DienThongTin(Ho, Ten, "  70000  ");
+            checkout.BamTiepTuc();
+
+            Assert.That(checkout.DaSangBuocHai(), Is.True,
+                "Mã bưu chính có khoảng trắng ở đầu và cuối bị từ chối.");
+        }
+
+        [Test]
+        [Description("TC09 - Cả 3 ô trống thì báo lỗi First Name trước")]
+        public void TC09_CaBaOTrong_BaoLoiFirstNameTruoc()
+        {
+            checkout.DienThongTin("", "", "");
+            checkout.BamTiepTuc();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(checkout.DaSangBuocHai(), Is.False);
+                Assert.That(checkout.LayThongBaoLoi(), Is.EqualTo(LoiThieuHo),
+                    "Thứ tự kiểm tra không đúng: phải báo First Name trước.");
+                Assert.That(checkout.LayThongBaoLoi(), Is.Not.EqualTo(LoiThieuMaBuuChinh));
+            });
+        }
+
+        [Test]
+        [Description("TC10 - Đóng thông báo lỗi rồi nhập lại mã hợp lệ")]
+        public void TC10_DongLoiRoiNhapLai_SangBuocHai()
+        {
+            checkout.DienThongTin(Ho, Ten, "");
+            checkout.BamTiepTuc();
+            Assert.That(checkout.CoThongBaoLoi(), Is.True, "Chưa thấy thông báo lỗi ban đầu.");
+
+            checkout.DongThongBaoLoi();
+            Assert.That(checkout.CoThongBaoLoi(), Is.False, "Bấm đóng nhưng thông báo lỗi vẫn còn.");
+
+            checkout.DienThongTin(Ho, Ten, "70000");
+            checkout.BamTiepTuc();
+
+            Assert.That(checkout.DaSangBuocHai(), Is.True,
+                "Đã nhập lại mã hợp lệ nhưng không sang được bước 2.");
+        }
+
+        private bool CoHopThoaiAlert()
+        {
+            try
+            {
+                driver.SwitchTo().Alert().Dismiss();
+                return true;
+            }
+            catch (NoAlertPresentException)
+            {
+                return false;
+            }
+        }
+    }
+}
+```
+
+</details>
+
+### Chạy thử trên Visual Studio
+
+Nhóm dán nguyên file AI vào `Tests/`, Rebuild, lọc `Class:"AiPostalCodeTests"` trong Test Explorer rồi Run: **10/10 Passed**. Chạy xong nhóm xóa file này, không commit.
+
+![](screenshots/lab6_E1_chay_thu_ai.png)
+
+AI lần này đoán đúng hành vi chính của trang: chỉ bắt buộc ô không trống, không kiểm định dạng, không giới hạn độ dài. Nhưng xanh hết không có nghĩa là dùng được hết. Nhóm đọc từng ca và kiểm chứng thêm bằng một test tạm (đã xóa) thì thấy có chỗ sai.
+
+### Các ca KHÔNG dùng được
+
+| Ca | Vấn đề | Vì sao loại |
+|---|---|---|
+| **TC06** chỉ khoảng trắng | AI tự nhận đây là "lỗi tiềm ẩn" (trang nên chặn), nhưng lại viết `Assert.That(DaSangBuocHai(), Is.True)`, tức là khẳng định hành vi lỗi là đúng | **Kỳ vọng sai**: test sẽ xanh khi trang còn lỗi và đỏ đúng lúc lỗi được sửa. Một ca kiểm thử không được lấy lỗi làm kết quả mong đợi. Nếu coi đây là lỗi thì phải báo lỗi, không phải viết test cho nó đậu |
+| **TC07** chuỗi `<script>alert(1)</script>` | Kiểm "không bật hộp thoại alert" sau khi sang bước 2 | **Kiểm một điều trang không có**: nhóm kiểm chứng thì trang bước 2 không hiển thị mã bưu chính ở đâu cả (`PageSource` không chứa chuỗi đã nhập), nên script không có chỗ nào để chạy. Câu Assert luôn đúng, không chứng minh được gì. Hàm phụ `CoHopThoaiAlert()` còn gọi `driver.SwitchTo()` thẳng trong file test, trái quy ước POM của Bài 4 |
+| **TC10** đóng lỗi rồi nhập lại | Gọi `DienThongTin(Ho, Ten, "70000")` lần thứ hai | **Làm sai điều nó nói**: hai ô tên vẫn còn chữ cũ nên `SendKeys` gõ nối thêm. Nhóm kiểm chứng thì ô First Name thành `NguyenNguyen`, Last Name thành `AnAn`. Test vẫn xanh nhưng không kiểm đúng việc "nhập lại". Bản giữ lại thêm hàm `NhapLaiMaBuuChinh()` (xóa ô rồi gõ) và chỉ nhập lại ô mã |
+
+Ngoài ra code AI còn **tự viết `[SetUp]` trong file test** (`MoTrangCheckout`), trái quy ước của Bài 5: file test không có `[SetUp]`, vòng đời nằm ở `BaseTest`.
+
+### Các ca giữ lại
+
+`Tests/CheckoutTests.cs` (`[Category("Checkout")]`) giữ 7 ca dùng được nguyên ý: TC01, TC02, TC03, TC04, TC05, TC08, TC09. Thêm TC10 đã sửa, tổng cộng 8 ca. Bản giữ lại dùng hàm `private MoTrangCheckout()` thay cho `[SetUp]`. Cả 8 ca đều Passed ở cả chế độ tuần tự lẫn song song.
+
+### Nhận xét
+
+Lần này AI không bịa luật như các bài trước, cả 10 ca chạy đều xanh. Nhưng 3/10 ca vẫn không dùng được, và cả 3 đều xanh nên chạy test không phát hiện ra: một ca lấy lỗi làm kỳ vọng, một ca kiểm điều không thể xảy ra, một ca làm khác điều tên nó nói. Bài học là test xanh chưa đủ, phải đọc từng câu Assert và tự hỏi "nếu trang sai thì câu này có đỏ không".
+
+---
+
 # Lab 5 — Xây dựng framework: cấu trúc, cấu hình & Data-Driven Testing
 
 Nâng cấp bộ test của Bài 1–4 thành một framework nhỏ: cấu hình nằm trong file JSON, trình duyệt tạo qua `DriverFactory`, vòng đời trình duyệt gom vào `BaseTest`, còn dữ liệu đăng nhập đọc từ `Data/users.json`. Toàn bộ test chạy bằng **Test Explorer** của Visual Studio 2026, ảnh chụp nằm trong thư mục `screenshots/` (tên bắt đầu bằng `lab5_`).

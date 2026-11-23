@@ -9,7 +9,7 @@ namespace FirstTests.Tests;
 [TestFixture]
 public class FirstSeleniumTest : BaseTest
 {
-    [Test]
+    [Test, Category("Smoke")]
     public void OpenSeleniumHomePage_TitleShouldContainSelenium()
     {
         driver.Navigate().GoToUrl(cfg.SeleniumHomeUrl);

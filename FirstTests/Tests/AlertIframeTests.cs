@@ -7,6 +7,7 @@ namespace FirstTests.Tests;
 /// Lab 3 - Phần C, viết lại bằng Page Object Model: xử lý 3 loại JavaScript alert và gõ chữ vào trình soạn thảo trong iframe.
 /// </summary>
 [TestFixture]
+[Category("TheInternet")]
 public class AlertIframeTests : BaseTest
 {
     [Test]
@@ -46,7 +47,7 @@ public class AlertIframeTests : BaseTest
         Assert.That(trang.LayKetQua(), Is.EqualTo($"You entered: {input}"));
     }
 
-    [Test]
+    [Test, Category("Slow")]
     public void Iframe_TypeIntoEditor_ThenBackToDefaultContent()
     {
         const string text = "Nhom em dang test iframe bang Selenium";
