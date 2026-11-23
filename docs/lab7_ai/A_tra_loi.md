@@ -1,0 +1,18 @@
+| Mã | Loại | Tên ca | Các bước | Kết quả mong đợi |
+|---|---|---|---|---|
+| TC01 | Thường | Thêm 1 sản phẩm vào giỏ | 1. Đăng nhập standard_user / secret_sauce<br>2. Ở trang Inventory bấm "Add to cart" cho "Sauce Labs Backpack" | Nút đổi thành "Remove"; huy hiệu giỏ hàng hiện số 1 |
+| TC02 | Thường | Xem giỏ hàng sau khi thêm | 1. Đăng nhập<br>2. Thêm "Sauce Labs Backpack" và "Sauce Labs Bike Light"<br>3. Bấm biểu tượng giỏ hàng | Chuyển tới cart.html; có đúng 2 dòng sản phẩm với tên, giá ($29.99, $9.99), số lượng 1 |
+| TC03 | Thường | Xóa sản phẩm trong trang giỏ hàng | 1. Thêm 2 sản phẩm<br>2. Vào cart.html<br>3. Bấm "Remove" ở "Sauce Labs Bike Light" | Dòng Bike Light biến mất; còn 1 sản phẩm; huy hiệu giỏ giảm còn 1 |
+| TC04 | Thường | Thanh toán trọn luồng 1 sản phẩm | 1. Thêm "Sauce Labs Backpack"<br>2. Vào giỏ, bấm "Checkout"<br>3. Điền First Name "An", Last Name "Nguyen", Postal Code "70000", bấm "Continue"<br>4. Ở Overview bấm "Finish" | Overview hiện Item total $29.99, Tax $2.40, Total $32.39; sau Finish tới checkout-complete.html với dòng "Thank you for your order!"; huy hiệu giỏ biến mất |
+| TC05 | Thường | Tổng tiền đúng khi có nhiều sản phẩm | 1. Thêm Backpack ($29.99), Bolt T-Shirt ($15.99), Onesie ($7.99)<br>2. Checkout, điền đủ thông tin, Continue | Overview liệt kê đúng 3 sản phẩm; Item total = $53.97; Tax = 8% làm tròn 2 chữ số ($4.32); Total = $58.29 |
+| TC06 | Thường | Giỏ hàng giữ nguyên khi quay lại mua tiếp | 1. Thêm 1 sản phẩm, vào giỏ<br>2. Bấm "Continue Shopping"<br>3. Thêm sản phẩm thứ 2, vào lại giỏ | Quay về Inventory; giỏ có đủ 2 sản phẩm, sản phẩm đầu không bị mất |
+| TC07 | Biên | Thêm toàn bộ 6 sản phẩm (số lượng tối đa) | 1. Bấm "Add to cart" cho cả 6 sản phẩm<br>2. Vào giỏ, Checkout, điền đủ thông tin, Continue | Huy hiệu hiện 6; giỏ có 6 dòng; Item total $129.94, Tax $10.40, Total $140.34 |
+| TC08 | Biên | Xóa sản phẩm cuối cùng, giỏ về 0 | 1. Thêm 1 sản phẩm<br>2. Vào giỏ, bấm "Remove" | Giỏ trống không còn dòng nào; huy hiệu giỏ hàng biến mất (không hiện số 0) |
+| TC09 | Biên | Thêm rồi bỏ ngay trên trang Inventory | 1. Bấm "Add to cart" cho 1 sản phẩm<br>2. Bấm "Remove" trên chính thẻ sản phẩm đó | Nút đổi lại "Add to cart"; huy hiệu biến mất; vào giỏ thấy trống |
+| TC10 | Biên | Thanh toán sản phẩm rẻ nhất (giá nhỏ nhất) | 1. Chỉ thêm "Sauce Labs Onesie" ($7.99)<br>2. Checkout, điền đủ thông tin, Continue | Item total $7.99; Tax $0.64; Total $8.63 (làm tròn đúng 2 chữ số thập phân) |
+| TC11 | Biên | Thông tin khách hàng dài 1 ký tự | 1. Thêm 1 sản phẩm, Checkout<br>2. Điền First Name "A", Last Name "B", Postal Code "1", Continue | Được chuyển sang trang Overview bình thường, không báo lỗi |
+| TC12 | Lỗi | Bỏ trống First Name | 1. Thêm 1 sản phẩm, Checkout<br>2. Để trống First Name, điền Last Name và Postal Code, Continue | Ở lại trang Your Information; hiện "Error: First Name is required" |
+| TC13 | Lỗi | Bỏ trống Last Name | 1. Thêm 1 sản phẩm, Checkout<br>2. Điền First Name, để trống Last Name, điền Postal Code, Continue | Hiện "Error: Last Name is required"; không sang Overview |
+| TC14 | Lỗi | Bỏ trống Postal Code | 1. Thêm 1 sản phẩm, Checkout<br>2. Điền First Name, Last Name, để trống Postal Code, Continue | Hiện "Error: Postal Code is required"; không sang Overview |
+| TC15 | Lỗi | Checkout khi giỏ hàng trống | 1. Đăng nhập, không thêm sản phẩm nào<br>2. Vào giỏ, bấm "Checkout" | Hệ thống phải chặn hoặc báo giỏ trống, không cho tạo đơn rỗng (nếu vẫn cho qua tới Finish thì ghi nhận là lỗi) |
+| TC16 | Lỗi | Hủy ở trang Overview không tạo đơn | 1. Thêm 1 sản phẩm, Checkout, điền đủ thông tin, Continue<br>2. Ở Overview bấm "Cancel" | Quay về Inventory; không tới checkout-complete.html; sản phẩm vẫn còn trong giỏ (huy hiệu vẫn là 1) |

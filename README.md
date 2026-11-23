@@ -1,3 +1,142 @@
+# Lab 7 — Khai thác AI chuyên sâu trong quy trình kiểm thử
+
+Tính năng chọn: **thêm sản phẩm vào giỏ hàng và thanh toán** trên saucedemo. Lần này nhóm hỏi một "AI độc lập", tức một phiên chat mới, không đọc được file, không chạy được lệnh, chỉ thấy đúng nội dung prompt. Như vậy AI không biết trước gì về project. Mọi prompt và câu trả lời được lưu nguyên văn trong `docs/lab7_ai/`, rồi mở bằng Visual Studio để chụp. Test chạy bằng Test Explorer, còn `dotnet build` và `dotnet test` gõ trong Terminal của VS. Ảnh nằm trong `screenshots/`, tên bắt đầu bằng `lab7_`.
+
+```
+FirstTests/
+├── Pages/CartPage.cs              AI sinh (Phần C), sửa XoaSanPham ở Phần D
+├── Pages/CheckoutOverviewPage.cs  trang Overview + trang hoàn tất (tiền hàng, thuế, tổng, Finish, Cancel)
+├── Pages/InventoryPage.cs         + ThemVaoGio, BoKhoiGio, LayChuNutCuaSanPham, ThemTatCaVaoGio
+├── Pages/CheckoutPage.cs          + DienVaTiepTuc (điền đủ rồi sang Overview)
+├── Tests/GioHangTests.cs          12 ca giỏ hàng đã thẩm định, [Category("GioHang")]
+└── Tests/KiemLocatorCartPageTests.cs  đếm phần tử khớp từng locator AI dùng, [Category("ThamDinhAI")]
+docs/lab7_ai/   A_prompt, A_tra_loi, B_tham_dinh, C_prompt, C_tra_loi, D_gia_thuyet, D_prompt, D_tra_loi, E_loi_cua_AI
+```
+
+## Phần A — Prompt 4 thành phần, AI liệt kê test case
+
+Prompt (`docs/lab7_ai/A_prompt.md`) có đủ 4 phần:
+
+- **Vai trò:** kỹ sư QA automation có kinh nghiệm Selenium C# và NUnit.
+- **Ngữ cảnh framework:** saucedemo, C# .NET 10, NUnit 4, Selenium 4.52, POM có `BaseTest` / `BasePage` / `Tim(By)`, cùng các Page có sẵn.
+- **Yêu cầu:** tính năng giỏ hàng và thanh toán, đủ 3 loại ca (thường, biên, lỗi), khoảng 12–15 ca, chưa viết code.
+- **Định dạng đầu ra:** đúng một bảng Markdown 5 cột `Mã | Loại | Tên ca | Các bước | Kết quả mong đợi`.
+
+AI trả về 16 ca: 6 ca thường, 5 ca biên, 5 ca lỗi. Nội dung lưu nguyên văn ở `docs/lab7_ai/A_tra_loi.md`.
+
+| Prompt | Câu trả lời của AI |
+|---|---|
+| ![](screenshots/lab7_A1_prompt_4_thanh_phan.png) | ![](screenshots/lab7_A2_ai_tra_loi_16_ca.png) |
+
+## Phần B — Đối chiếu với trang thật: GIỮ / BỎ / SỬA
+
+Nhóm viết một test thăm dò tạm. Test đi đúng các bước AI ghi trên saucedemo thật và in ra URL, số dòng trong giỏ, huy hiệu, chữ trên nút, số tiền ở trang Overview và câu báo lỗi. Sau đó nhóm đặt kết quả cạnh "Kết quả mong đợi" của AI để so. Bảng đầy đủ nằm ở `docs/lab7_ai/B_tham_dinh.md`.
+
+| Mã | Quyết định | Lý do |
+|---|---|---|
+| TC01, 02, 03, 04, 06, 08, 09, 13, 16 | **GIỮ** (9 ca) | Trang thật cho kết quả giống hệt AI mong đợi |
+| TC05, TC07, TC10 | **SỬA** (gộp thành 1 test, 3 bộ dữ liệu) | Số tiền AI tính đúng, nhưng chép cứng vào test thì dễ gãy. Nhóm sửa thành: cộng giá đọc được trong giỏ rồi so với Item total, Tax bằng 8% tiền hàng, Total bằng Item cộng Tax. TC07 bỏ chữ "số lượng tối đa" vì saucedemo không có giới hạn |
+| TC15 | **BỎ** | Kỳ vọng sai. AI cho rằng giỏ trống "phải bị chặn", nhưng saucedemo cho đi hết luồng với Total $0.00 và vẫn hiện "Thank you for your order!" |
+| TC14 | **BỎ** | Trùng hẳn ca bỏ trống Postal Code của `CheckoutTests` (Lab 6) |
+| TC12 | **BỎ** | Cùng cơ chế báo lỗi bắt buộc nhập ở trang Your Information mà Lab 6 đã phủ. Giữ TC13 (đi từ giỏ hàng sang) làm đại diện là đủ |
+| TC11 | **BỎ** | Kiểm độ dài ô nhập, thuộc trang Your Information chứ không thuộc giỏ hàng. Lab 6 đã có ca biên 1 ký tự |
+
+![](screenshots/lab7_B1_bang_giu_bo_sua.png)
+
+## Phần C — AI sinh Page Object `CartPage` và checklist thẩm định
+
+Prompt (`docs/lab7_ai/C_prompt.md`) nêu rõ 5 quy ước của nhóm:
+
+1. Kế thừa `BasePage`, không tự tạo driver.
+2. Tìm phần tử bằng `Tim()` (có chờ), hỏi có/không bằng `CoHienThi()`.
+3. Locator là `private readonly By`; hàm đặt tên theo hành vi, không trả `IWebElement`, không có `Assert` trong Page.
+4. Chuyển trang thì trả Page mới, tái dùng `InventoryPage` và `CheckoutPage`.
+5. Không dùng `Thread.Sleep`.
+
+Kèm theo prompt là nguyên văn `BasePage.cs` và `LoginPage.cs` để AI bắt chước. AI trả về một file `CartPage.cs` cùng bảng giải thích locator (`docs/lab7_ai/C_tra_loi.md`). Nhóm chép nguyên code vào `Pages/CartPage.cs`, không sửa gì, rồi build.
+
+| Prompt | Câu trả lời | Code AI trong project |
+|---|---|---|
+| ![](screenshots/lab7_C1_prompt_cartpage.png) | ![](screenshots/lab7_C2_ai_tra_loi_cartpage.png) | ![](screenshots/lab7_C3_cartpage_ai_trong_project.png) |
+
+**Checklist 6 điểm cho `CartPage` do AI sinh**
+
+| # | Tiêu chí | Đạt? | Đã kiểm thế nào |
+|---|---|---|---|
+| 1 | Locator thật | ✅ | `KiemLocatorCartPageTests` đăng nhập, thêm 2 sản phẩm, mở giỏ rồi đếm số phần tử khớp từng locator: cả 10 locator đều ra đúng số cần (ảnh C4) |
+| 2 | Assert đúng nghiệp vụ | ✅ | Page không có `Assert`, đúng quy ước 3. Các Assert nằm ở `GioHangTests`, giá trị nào cũng đã đối chiếu với trang thật ở Phần B |
+| 3 | Dùng wait | ⚠️ | Có dùng `Tim()` và `wait.Until`, không có `Thread.Sleep`. Nhưng điều kiện chờ trong `XoaSanPham` **sai**: chờ phần tử stale trong khi trang không bao giờ làm nó stale. Lỗi chỉ lộ ra khi chạy, đã sửa ở Phần D |
+| 4 | Đúng chuẩn khung | ✅ | Kế thừa `BasePage`, constructor nhận `IWebDriver`, 10 locator đều là `private readonly By`, hàm chuyển trang trả `InventoryPage` / `CheckoutPage`. Trong `Pages/` không có `new ChromeDriver`, `Thread.Sleep` hay `Assert` |
+| 5 | Không thừa | ✅ | Mọi hàm public đều được `GioHangTests` dùng, hàm private chỉ phục vụ hàm public. AI gợi ý tách `HeaderComponent`. Nhóm thấy hợp lý nhưng chưa làm, vì đề chỉ cho một file |
+| 6 | Hiểu từng dòng | ✅ | Nhóm đọc hết và giải thích được từng dòng. Nhờ đọc kỹ hàm `DaBiGoKhoiTrang` mà ở Phần D nhóm đoán đúng nguyên nhân timeout trước khi hỏi AI |
+
+Tiếp theo nhóm viết `Tests/GioHangTests.cs` gồm 9 ca GIỮ và 1 test tính tổng chạy với 3 bộ dữ liệu (1 sản phẩm rẻ nhất, 3 sản phẩm, cả 6 sản phẩm), tổng cộng 12 ca. File không có `[SetUp]`, trình duyệt do `BaseTest` lo. Để test có hàm gọi, nhóm thêm vào `InventoryPage` các hàm thêm/bỏ sản phẩm theo tên, tạo `CheckoutOverviewPage`, và thêm hàm `CheckoutPage.DienVaTiepTuc`.
+
+| Kiểm locator thật (Test Explorer) | Ca tính tổng đã sửa |
+|---|---|
+| ![](screenshots/lab7_C4_kiem_locator_ai_tren_trang_that.png) | ![](screenshots/lab7_C8_ca_tinh_tong_da_sua.png) |
+
+| `dotnet build FirstTests` | `dotnet test` lọc `Category=GioHang\|Category=ThamDinhAI`: 13/13 |
+|---|---|
+| ![](screenshots/lab7_C5_dotnet_build.png) | ![](screenshots/lab7_C6_dotnet_test_gio_hang.png) |
+
+## Phần D — Debug một lỗi thật cùng AI
+
+Nhóm không phải cố tình cài lỗi. Lỗi nằm sẵn trong code AI sinh ở Phần C, và thuộc đúng loại "thiếu hoặc sai điều kiện chờ" mà đề nêu.
+
+**1. Chạy và đọc stack trace.** Chạy 12 ca `GioHang` trong Test Explorer: 10 xanh, 2 đỏ. Cả 2 ca đỏ đều gọi `XoaSanPham`, cùng báo `WebDriverTimeoutException: Timed out after 10 seconds`. Trong stack trace, dòng đầu tiên thuộc code của nhóm là `CartPage.XoaSanPham ... line 71`, đúng dòng `wait.Until(_ => DaBiGoKhoiTrang(dong))`.
+
+![](screenshots/lab7_D1_test_explorer_do_truoc_khi_sua.png)
+
+**2. Tự đoán trước khi hỏi AI** (`docs/lab7_ai/D_gia_thuyet.md`). Lỗi là timeout chứ không phải `NoSuchElementException`, nghĩa là locator và cú click vẫn chạy được. Chỉ có điều kiện chờ là không bao giờ thành đúng. Nhóm đoán saucedemo không gỡ thẻ của dòng đã xóa, nên phần tử cũ không bao giờ stale. Để kiểm, nhóm in `outerHTML` của `.cart_list` sau khi bấm Remove. Kết quả còn lại `<div class="removed_cart_item"></div>`, còn phần tử cũ trả `Displayed=False` mà không ném lỗi. Giả thuyết đúng.
+
+**3. Hỏi một phiên AI mới** (`D_prompt.md`), đưa stack trace, test bị rớt và phần code liên quan. Lúc hỏi, lời gọi trong test nằm ở dòng 138. Sau đó nhóm chỉnh TC03 và TC06 cho khớp các bước AI ghi ở Phần A, nên ảnh chụp về sau hiện dòng 142.
+
+AI chẩn đoán đúng nguyên nhân, trùng với giả thuyết của nhóm: React dùng lại node DOM cũ, chỉ đổi class. AI đề xuất chờ theo trạng thái nhìn thấy được, tức là "không còn dòng nào mang tên này", và mỗi vòng chờ thì tìm lại phần tử (`D_tra_loi.md`). Lúc đầu nhóm định chờ số dòng giảm đi 1. Cách của AI gọn hơn vì không cần nhớ số dòng trước khi xóa, nên nhóm làm theo AI.
+
+| Giả thuyết tự đoán | Prompt hỏi AI | AI chẩn đoán |
+|---|---|---|
+| ![](screenshots/lab7_D2_gia_thuyet_tu_doan.png) | ![](screenshots/lab7_D3_prompt_hoi_ai_debug.png) | ![](screenshots/lab7_D4_ai_chan_doan.png) |
+
+**4. Sửa rồi chạy lại.** `XoaSanPham` sau khi sửa:
+
+```csharp
+public CartPage XoaSanPham(string ten)
+{
+    TimDongTheoTen(ten).FindElement(nutXoa).Click();
+    wait.Until(_ => !ConSanPhamTrongGio(ten));
+    return this;
+}
+```
+
+`ConSanPhamTrongGio` tìm lại `.cart_item` ở mỗi vòng. Nếu gặp `StaleElementReferenceException` hay `NoSuchElementException` giữa chừng thì coi như "chưa xong" để vòng sau kiểm lại. Hàm `DaBiGoKhoiTrang` bị xóa. Chạy lại được 12/12 xanh. Hai ca trước đó rớt sau 12 giây, giờ xong trong khoảng 2–5 giây.
+
+| Code đã sửa | Hàm chờ mới | Test Explorer sau khi sửa |
+|---|---|---|
+| ![](screenshots/lab7_D5_xoasanpham_da_sua.png) | ![](screenshots/lab7_D6_ham_cho_moi.png) | ![](screenshots/lab7_D7_test_explorer_xanh_sau_khi_sua.png) |
+
+Ngoài lề có hai chuyện:
+- Một lần chạy, ca `CancelOTrangOverview` rớt vì `StaleElementReferenceException`, chạy lại thì xanh. Nhóm nghi chỗ tìm thẻ sản phẩm trong `InventoryPage` (code nhóm tự viết): ngay sau khi đăng nhập, trang có thể vẽ lại danh sách giữa chừng. Nhóm sửa hàm đó để khi gặp stale thì trả null cho vòng chờ thử lại. Sau đó chạy liên tiếp 4 lần, nhóm `GioHang` đều 12/12.
+- Khi chạy cả bộ 41 ca song song 6 luồng, có một lần ca 6 sản phẩm bị timeout lúc máy đang tải nặng. Chạy lại cả bộ được 41/41.
+
+## Phần E — Ghi nhận AI sai
+
+Chi tiết ở `docs/lab7_ai/E_loi_cua_AI.md`. Tóm tắt:
+
+| # | AI sai ở đâu | Loại lỗi | Phát hiện bằng cách nào |
+|---|---|---|---|
+| 1 | TC15: "giỏ trống bấm Checkout thì phải bị chặn" | Assert sai nghiệp vụ, tự đặt ra một quy tắc mà saucedemo không có | Đi đúng các bước trên trang thật: vào được Overview với Total $0.00 và bấm Finish thành công |
+| 2 | `CartPage.XoaSanPham` chờ dòng cũ bị stale; ghi chú của AI còn khẳng định "chờ dòng bị gỡ khỏi DOM" | Wait sai điều kiện, gây timeout thật | Chạy test thấy 2 ca rớt, stack trace chỉ `CartPage.cs:71`; in `outerHTML` thấy thẻ `removed_cart_item` |
+| 3 | TC07 gọi 6 sản phẩm là "số lượng tối đa" | Bịa ra một giới hạn không có | Saucedemo chỉ bán 6 món, mỗi món thêm được 1 lần, không có thông báo giới hạn nào |
+
+| TC15 trong câu trả lời của AI | Ghi chú của AI về `XoaSanPham` |
+|---|---|
+| ![](screenshots/lab7_E1_ai_tc15_ky_vong_sai.png) | ![](screenshots/lab7_E2_ai_cartpage_cho_stale.png) |
+
+Lỗi 2 là bài học lớn nhất. Code build sạch, cả 10 locator đều thật, không có `Thread.Sleep`, đọc qua thấy rất chuẩn. Nếu chỉ review bằng mắt mà không chạy thì nhóm đã cho qua. Những chỗ AI làm đúng (locator, số tiền, câu báo lỗi, chẩn đoán ở Phần D) cũng được ghi lại trong file Phần E, kèm tiêu chí đã dùng để kiểm.
+
+---
+
 # Lab 6 — Test Runner, báo cáo, logging & chạy song song
 
 Làm tiếp trên framework của Bài 5. Test chạy bằng **Test Explorer** của Visual Studio 2026. Các lệnh `dotnet test` đề bài yêu cầu được gõ trong cửa sổ **Terminal của Visual Studio** (View > Terminal). Ảnh chụp nằm trong `screenshots/`, tên bắt đầu bằng `lab6_`.
